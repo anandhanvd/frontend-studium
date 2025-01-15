@@ -9,9 +9,9 @@ const SingleCourse = () => {
   const [courseName, setCourseName] = useState("");
   const fetchDomains = async (domainName) => {
     try {
-      const data  = await axios.post(
-        "aistudiumb.onrender.com/domains/search",
-        { domainName}
+      const data = await axios.post(
+        "https://aistudiumb-9jub.onrender.com/domains/search",
+        { domainName }
       );
       setDomainData(data)
       console.log(data)
@@ -25,7 +25,7 @@ const SingleCourse = () => {
   const getSingleCourse = async () => {
     try {
       const { data } = await axios.post(
-        "https://aistudiumb.onrender.com/course/singleCourse",
+        "https://aistudiumb-9jub.onrender.com/course/singleCourse",
         { courseId: id }
       );
       setCourseData(data?.course);

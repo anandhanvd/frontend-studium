@@ -94,7 +94,7 @@ const AICuratedMCQ = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://fullcoursegen-cvil.onrender.com/generate-question",
+        "https://ml-mvqr.onrender.com/mcq/generate-question",
         formData
       );
       setQuizData(response.data.units[0].assessment.unitAssessment);
@@ -127,7 +127,7 @@ const AICuratedMCQ = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://fullcoursegen-ibzp.onrender.com/course-recommendation",
+        "https://ml-mvqr.onrender.com/course/course-recommendation",
         recomData
       );
       setCourseRecom(response.data);
@@ -150,7 +150,7 @@ const AICuratedMCQ = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://fullcoursegen.onrender.com/generate-course",
+        "https://ml-mvqr.onrender.com/generator/generate-course",
         formData
       );
       setCourseData(response.data);
@@ -168,7 +168,8 @@ const AICuratedMCQ = () => {
       
       console.log("Input for Level Prediction : ", levelData)
       const response = await axios.post(
-        "https://fullcoursegen-cvil.onrender.com/predict-level", levelData
+        "https://ml-mvqr.onrender.com/mcq/predict-level",
+        levelData
       );
       setLevel(response.data)
       console.log(response)
@@ -221,8 +222,10 @@ const AICuratedMCQ = () => {
 
   const postQuizResult = async (resultsData) => {
     try {
-      // Make a POST request to the backend
-      const response = await axios.post("https://aistudiumb.onrender.com/api/results/save", resultsData);
+      const response = await axios.post(
+        "https://aistudiumb-9jub.onrender.com/api/results/save",
+        resultsData
+      );
       
       // Handle success
       toast.success("Result saved successfully:");

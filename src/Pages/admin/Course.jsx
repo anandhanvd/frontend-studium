@@ -116,13 +116,11 @@ const Course = () => {
   };
 
   const fetchDomain = async (file_url) => {
-    console.log(file_url)
     try {
-      // Send a request to detect the domain from the file
-      const response = await axios.post("https://fullcoursegen-1.onrender.com/detect-domain-from-file", {
-        file_url,
-      });
-  
+      const response = await axios.post(
+        "https://ml-mvqr.onrender.com/content/detect-domain-from-file",
+        { file_url }
+      );
       // Extract subDomain and fileName from the response
       const { subdomain, filename } = response.data;
   
@@ -134,11 +132,8 @@ const Course = () => {
   };
 
   const postDomain = async (domainName, document) => {
-    console.log("Domain Name : ", domainName)
-    console.log("Document Name : ", document)
     try {
-      // Save the domain and document in the backend
-      await axios.post("https://aistudiumb.onrender.com/domains/add", {
+      await axios.post("https://aistudiumb-9jub.onrender.com/domains/add", {
         domainName,
         document
       });
@@ -161,7 +156,10 @@ const Course = () => {
     };
 
     try {
-      await axios.post("https://aistudiumb.onrender.com/course/createCourse", courseData);
+      await axios.post(
+        "https://aistudiumb-9jub.onrender.com/course/createCourse",
+        courseData
+      );
       alert("Course added successfully!");
       fetchDomain(notes[0]);
       toggleModal();

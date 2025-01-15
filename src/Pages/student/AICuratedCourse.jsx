@@ -103,7 +103,7 @@ const AICuratedCourse = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://fullcoursegen.onrender.com/generate-course",
+        "https://ml-mvqr.onrender.com/generator/generate-course",
         data
       );
       setCourseData(response.data);
