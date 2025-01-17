@@ -55,7 +55,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await axios.get(`https://aistudiumb.onrender.com/api/results/user/${userId}`);
+        const response = await axios.get(`https://aistudiumb-9jub.onrender.com/api/results/user/${userId}`);
         setResults(response.data);
         setLoading(false);
       } catch (error) {
