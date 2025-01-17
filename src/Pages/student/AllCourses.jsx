@@ -108,7 +108,7 @@ const AllCourses = () => {
   const getCourses = async () => {
     try {
       const { data } = await axios.get(
-        "https://aistudiumb.onrender.com/course/allCourses"
+        "https://aistudiumb-9jub.onrender.com/course/allCourses"
       );
       setCourses(data.courses); // Assuming 'data.courses' is the array of courses
     } catch (error) {
@@ -119,7 +119,7 @@ const AllCourses = () => {
   const handleEnroll = async (id) => {
     try {
       const { data } = await axios.post(
-        "https://aistudiumb.onrender.com/user/enrollCourse",
+        "https://aistudiumb-9jub.onrender.com/user/enrollCourse",
         {
           courseId: id,
           userId: userId,

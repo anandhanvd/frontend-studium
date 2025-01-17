@@ -25,7 +25,7 @@ const Course = () => {
   const getDomains = async () => {
     try {
       const domainData = await axios.get(
-        "https://aistudiumb.onrender.com/domains/all"
+        "https://aistudiumb-9jub.onrender.com/domains/all"
       );
       console.log("Domains fetched:", domainData.data);
       setDomainData(domainData.data);
@@ -173,7 +173,7 @@ const Course = () => {
   const fetchCourses = async () => {
     try {
       const { data } = await axios.get(
-        "https://aistudiumb.onrender.com/course/allCourses"
+        "https://aistudiumb-9jub.onrender.com/course/allCourses"
       );
       setCourses(data.courses);
       if (data.courses.length > 0) {
@@ -192,7 +192,7 @@ const Course = () => {
   // Delete Course
   const deleteCourse = async (courseId) => {
     try {
-      await axios.post(`https://aistudiumb.onrender.com/course/delete`, {
+      await axios.post(`https://aistudiumb-9jub.onrender.com/course/delete`, {
         courseId,
       });
       alert("Course deleted successfully!");

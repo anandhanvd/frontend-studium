@@ -29,7 +29,7 @@ const userId = user._id;
   const getDomains = async () => {
     try {
       const domainData = await axios.post(
-        "https://aistudiumb.onrender.com/domains/search",
+        "https://aistudiumb-9jub.onrender.com/domains/search",
         { domainName: "s" }
       );
       console.log("Domains fetched:", domainData.data);
@@ -49,7 +49,7 @@ const userId = user._id;
     console.log("POSTING COURSE DATA",newcourseData)
     try {
       // Make a POST request to the backend
-      const response = await axios.post("https://aistudiumb.onrender.com/gencourse/add", newcourseData);
+      const response = await axios.post("https://aistudiumb-9jub.onrender.com/gencourse/add", newcourseData);
       
       // Handle success
       toast.success("Course saved successfully:");

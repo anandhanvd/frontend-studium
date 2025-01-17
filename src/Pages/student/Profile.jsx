@@ -23,7 +23,7 @@ const Profile = () => {
   useEffect(() => {
   const getCourses = async () => {
     try {
-      const response = await axios.get(`https://aistudiumb.onrender.com/gencourse/all/${userId}`);
+      const response = await axios.get(`https://aistudiumb-9jub.onrender.com/gencourse/all/${userId}`);
       
       setCuratedCourses(response.data.courses)
       console.log("Curated Courses by You : ", response.data.courses)
@@ -37,7 +37,7 @@ const Profile = () => {
 
   const getUserData = async () => {
     try {
-      const { data } = await axios.post("https://aistudiumb.onrender.com/user/get-user", {
+      const { data } = await axios.post("https://aistudiumb-9jub.onrender.com/user/get-user", {
         id: userId,
       });
       
@@ -55,7 +55,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await axios.get(`https://aistudiumb.onrender.com/api/results/user/${userId}`);
+        const response = await axios.get(`https://aistudiumb-9jub.onrender.com/api/results/user/${userId}`);
         setResults(response.data);
         setLoading(false);
       } catch (error) {

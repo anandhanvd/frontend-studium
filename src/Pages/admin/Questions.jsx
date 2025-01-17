@@ -17,7 +17,7 @@ const Questions = () => {
   const getQuiz = async () => {
     try {
       const { data } = await axios.post(
-        "https://aistudiumb.onrender.com/course/singleQuiz",
+        "https://aistudiumb-9jub.onrender.com/course/singleQuiz",
         {
           quizId,
         }
@@ -39,7 +39,7 @@ const Questions = () => {
         option: questionData.options,
         correctAns: questionData.correctAns,
       };
-      await axios.post("https://aistudiumb.onrender.com/course/addQuestion", newQuestion);
+      await axios.post("https://aistudiumb-9jub.onrender.com/course/addQuestion", newQuestion);
       setQuestionData({
         question: "",
         options: ["", "", "", ""],
@@ -55,7 +55,7 @@ const Questions = () => {
   // Delete a question
   const deleteQuestion = async (questionId) => {
     try {
-      await axios.post(`https://aistudiumb.onrender.com/ourse/deleteQuestion`, {
+      await axios.post(`https://aistudiumb-9jub.onrender.com/ourse/deleteQuestion`, {
         questionId,
       });
       getQuiz(); // Refresh the questions list after deletion

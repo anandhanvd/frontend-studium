@@ -14,7 +14,7 @@ const Quiz = () => {
   const getSingleCourse = async () => {
     try {
       const { data } = await axios.post(
-        "https://aistudiumb.onrender.com/course/singleCourse",
+        "https://aistudiumb-9jub.onrender.com/course/singleCourse",
         {
           courseId,
         }
@@ -36,7 +36,7 @@ const Quiz = () => {
         courseId,
         quizName,
       };
-      await axios.post("https://aistudiumb.onrender.com/course/createQuiz", quizData);
+      await axios.post("https://aistudiumb-9jub.onrender.com/course/createQuiz", quizData);
       setQuizName("");
       toggleModal();
       getSingleCourse();
@@ -47,7 +47,7 @@ const Quiz = () => {
 
   const deleteQuiz = async (quizId) => {
     try {
-      await axios.post(`https://aistudiumb.onrender.com/course/deleteQuiz`, {
+      await axios.post(`https://aistudiumb-9jub.onrender.com/course/deleteQuiz`, {
         quizId,
       });
       getSingleCourse();

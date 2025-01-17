@@ -26,7 +26,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("https://aistudiumb.onrender.com/user/register", {
+      const response = await axios.post("https://aistudiumb-9jub.onrender.com/user/register", {
         name,
         email,
         password,

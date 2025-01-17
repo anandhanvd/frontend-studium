@@ -9,7 +9,7 @@ const Students = () => {
   const getUsers = async () => {
     try {
       const { data } = await axios.get(
-        "https://aistudiumb.onrender.com/user/getAllstudents"
+        "https://aistudiumb-9jub.onrender.com/user/getAllstudents"
       );
       setAllUsers(data.user);
       console.log(data.user)

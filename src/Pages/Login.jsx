@@ -23,7 +23,7 @@ const Login = () => {
         return;
       }
       // Send login request to backend
-      const response = await axios.post("https://aistudiumb.onrender.com/user/login", {
+      const response = await axios.post("https://aistudiumb-9jub.onrender.com/user/login", {
         email,
         password,
       });

@@ -16,7 +16,7 @@ const StudentsProfile = () => {
   const getUserData = async () => {
     console.log("User ID ", userId)
     try {
-      const { data } = await axios.post("https://aistudiumb.onrender.com/user/get-user", {
+      const { data } = await axios.post("https://aistudiumb-9jub.onrender.com/user/get-user", {
         id: userId.userId,
       });
       setUser(data.user)
@@ -34,7 +34,7 @@ const StudentsProfile = () => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await axios.get(`https://aistudiumb.onrender.com/api/results/user/${userId.userId}`);
+        const response = await axios.get(`https://aistudiumb-9jub.onrender.com/api/results/user/${userId.userId}`);
         setResults(response.data);
         setLoading(false);
       } catch (error) {
