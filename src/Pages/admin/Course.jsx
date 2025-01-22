@@ -471,18 +471,36 @@ const Course = () => {
       {domainData?.domains?.map((dom, index) => (
         <div
           key={index}
-          className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
+          className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow h-[300px] flex flex-col"
         >
           <h2 className="text-xl font-semibold text-gray-700 mb-4">
             Domain: <span className="text-blue-600">{dom.domainName}</span>
           </h2>
-          <ul className="list-disc list-inside text-gray-700">
-            {dom.documents.map((doc, docIndex) => (
-              <li key={docIndex}>
-                <span className="text-blue-500 hover:underline">{doc}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2">
+            <ul className="space-y-2">
+              {dom.documents.map((doc, docIndex) => (
+                <li 
+                  key={docIndex}
+                  className="bg-gray-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <a 
+                    href={doc}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 text-sm block truncate"
+                    title={doc.split('/').pop()} // Shows full filename on hover
+                  >
+                    {doc.split('/').pop()} {/* Only show filename */}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="mt-4 pt-2 border-t border-gray-100">
+            <p className="text-sm text-gray-600">
+              {dom.documents.length} {dom.documents.length === 1 ? 'Document' : 'Documents'}
+            </p>
+          </div>
         </div>
       ))}
     </div>
