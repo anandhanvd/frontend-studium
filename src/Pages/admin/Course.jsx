@@ -4,7 +4,7 @@ import Header from "../../components/Header";
 import { useNavigate } from "react-router-dom";
 import { IoReload } from "react-icons/io5";
 import FilePreview from './FilePreview'; // Adjust the path as needed
-import { toast } from 'react-hot-toast';
+import { toast } from "react-hot-toast";
 
 const Course = () => {
   const navigate = useNavigate();
