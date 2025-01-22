@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { FaClock, FaCheckCircle } from "react-icons/fa";
 import { ToastContainer, toast } from 'react-toastify';
 import { useLocation } from "react-router-dom";
-import QuizLoadingAnimation from '../../components/QuizLoadingAnimation';
 
 const AICuratedMCQ = () => {
   const location = useLocation();
@@ -51,7 +50,6 @@ const AICuratedMCQ = () => {
   ]);
   const [level, setLevel] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
-  const [progress, setProgress] = useState(0);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -95,28 +93,10 @@ const AICuratedMCQ = () => {
   const fetchQuiz = async () => {
     try {
       setLoading(true);
-      setProgress(0);
-      
-      // Start progress animation
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 500);
-
       const response = await axios.post(
         "https://ml-mvqr.onrender.com/mcq/generate-question",
         formData
       );
-      
-      // Complete the progress
-      clearInterval(progressInterval);
-      setProgress(100);
-      
       setQuizData(response.data.units[0].assessment.unitAssessment);
       console.log("Quiz Data : ", response.data)
       
@@ -142,7 +122,8 @@ const AICuratedMCQ = () => {
 
   const handleGenerateRecom = async () => {
     const recomData = {
-      student_level:level,course: courseTitle
+      student_level: level,
+      course: courseTitle
     }
     setLoading(true);
     try {
@@ -151,9 +132,9 @@ const AICuratedMCQ = () => {
         recomData
       );
       setCourseRecom(response.data);
-      console.log("RECOMMENDATION DATA : ",response.data)
+      console.log("RECOMMENDATION DATA : ", response.data);
     } catch (error) {
-      console.log("Error",error)
+      console.log("Error", error);
     } finally {
       setLoading(false);
     }
@@ -165,20 +146,42 @@ const AICuratedMCQ = () => {
     "What is the focus area for the quiz?",
   ];
 
+  const [progress, setProgress] = useState(0);
+
   const handleGenerateCourse = async () => {
-    console.log("Form Data : ", formData)
     setLoading(true);
+    setProgress(0);
+    
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 500);
+
     try {
       const response = await axios.post(
         "https://ml-mvqr.onrender.com/generator/generate-course",
         formData
       );
+      clearInterval(progressInterval);
+      setProgress(100);
       setCourseData(response.data);
-      console.log(response.data)
+      console.log("Generated course data:", response.data);
+      
+      setTimeout(() => {
+        setLoading(false);
+        setProgress(0);
+        setShowUnitModal(false);
+      }, 500);
     } catch (error) {
-      console.log("Error",error)
-    } finally {
+      console.log("Error", error);
+      clearInterval(progressInterval);
       setLoading(false);
+      setProgress(0);
     }
   };
 
@@ -257,21 +260,22 @@ const AICuratedMCQ = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen p-4 md:p-8">
       <StudentHeader />
-      <ToastContainer/>
-      <div className="p-8 mt-32 rounded-lg w-full justify-self-center ">
-        <h2 className="text-3xl font-semibold text-center text-blue-600 mb-8">
+      <div className="mt-16 md:mt-24">
+        <h2 className="text-2xl md:text-3xl font-semibold text-center text-blue-600 mb-4 md:mb-8">
           AI Chatbot Quiz Creator
         </h2>
 
-        <div className="bg-sky-200 p-6 rounded-lg shadow-md max-w-4xl mx-auto">
-          <div className="chat-box h-64 overflow-y-auto  bg-gray-100 p-8 rounded-lg mb-4">
+        <div className="bg-sky-200 p-4 md:p-6 rounded-lg shadow-md max-w-4xl mx-auto">
+          <div className="chat-box h-48 md:h-64 overflow-y-auto bg-gray-100 p-4 md:p-8 rounded-lg mb-4">
             {chatHistory.map((chat, index) => (
               <div
                 key={index}
                 className={`mb-2 p-2 rounded ${
-                  chat.sender === "user" ? "bg-blue-200 w-fit justify-self-end text-right" : "bg-gray-300 w-fit"
+                  chat.sender === "user" 
+                    ? "bg-blue-200 w-fit ml-auto" 
+                    : "bg-gray-300 w-fit"
                 }`}
               >
                 {chat.message}
@@ -280,7 +284,7 @@ const AICuratedMCQ = () => {
           </div>
 
           {quizData.length === 0 && (
-            <div className="flex items-center">
+            <div className="flex flex-col md:flex-row gap-2">
               <input
                 type="text"
                 value={userInput}
@@ -291,257 +295,288 @@ const AICuratedMCQ = () => {
               />
               <button
                 onClick={handleUserMessage}
-                className="bg-blue-500 text-white px-4 py-2 rounded ml-2"
+                className="bg-blue-500 text-white px-4 py-2 rounded w-full md:w-auto"
                 disabled={loading}
               >
                 Send
               </button>
             </div>
           )}
-
-          {loading && <QuizLoadingAnimation progress={progress} />}
         </div>
 
+        {/* Quiz Section */}
         {quizData.length > 0 && (
-        <div className="bg-gray-100 w-fit justify-self-center mt-10 shadow-lg rounded-lg p-6">
-          {/* Timer */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2 text-lg font-bold text-blue-500">
-              <FaClock className="text-2xl" />
-              <span>
-                Time Remaining:{" "}
-                <span
-                  className={`${
-                    timeRemaining < 30 ? "text-red-500" : "text-green-500"
-                  }`}
-                >
-                  {Math.floor(timeRemaining / 60)}:
-                  {(timeRemaining % 60).toString().padStart(2, "0")}
-                </span>
-              </span>
+          <div className="bg-gray-100 w-full max-w-4xl mx-auto mt-6 md:mt-10 shadow-lg rounded-lg p-4 md:p-6">
+            {/* Timer Section - Removed visual timer but keeping functionality */}
+            <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+              <div className="text-blue-600 font-semibold">
+                Total Questions: {quizData.reduce((acc, topic) => acc + topic.questions.length, 0)}
+              </div>
             </div>
-            <div className="text-blue-600 font-semibold">
-              Total Questions: {quizData.reduce((acc, topic) => acc + topic.questions.length, 0)}
-            </div>
-          </div>
 
-          {/* Quiz Questions */}
-          {quizData.map((topic, topicIndex) => (
-            <div key={topicIndex} className="mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 bg-blue-100 p-3 rounded-lg shadow">
-                {topic.topic}
-              </h3>
-              {topic.questions.map((question) => (
-                <div
-                  key={question.questionId}
-                  className="mb-6 bg-gray-50 p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-300"
-                >
-                  <p className="text-lg font-medium text-gray-700 mb-4">
-                    {question.question}
-                  </p>
-                  {question.options.map((option, index) => (
-                    <label
-                      key={index}
-                      className="flex items-center space-x-2 mb-3 cursor-pointer bg-white p-2 rounded-lg border hover:border-blue-500 shadow hover:shadow-lg transition-all duration-300"
-                    >
-                      <input
-                        type="radio"
-                        name={question.questionId}
-                        value={option}
-                        onChange={() =>
-                          handleOptionChange(question.questionId, option)
-                        }
-                        className="accent-blue-500"
-                      />
-                      <span className="text-gray-800">{option}</span>
-                    </label>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ))}
-
-          {/* Submit Button */}
-          <div className="text-center">
-            <button
-              onClick={handleSubmit}
-              className="bg-green-500 text-white font-bold py-2 px-6 rounded-lg shadow hover:bg-green-600 hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
-            >
-              <FaCheckCircle className="text-xl" />
-              <span>Submit Quiz</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-
-        { showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded shadow-lg text-center">
-              <h2 className="text-2xl font-bold mb-4">Your Score</h2>
-              <p className="text-xl mb-4">
-                {score}/{results.length}
-              </p>
-              <div className="text-left max-h-96 overflow-y-auto">
-                {results.map((result, index) => (
-                  <div key={index} className="mb-4">
-                    <p className="font-semibold">{result.question}</p>
-                    <p
-                      className={`text-sm ${
-                        result.isCorrect ? "text-green-500" : "text-red-500"
-                      }`}
-                    >
-                      Your Answer: {result.userAnswer}
+            {/* Questions */}
+            {quizData.map((topic, topicIndex) => (
+              <div key={topicIndex} className="mb-6">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-4 bg-blue-100 p-3 rounded-lg shadow">
+                  {topic.topic}
+                </h3>
+                {topic.questions.map((question) => (
+                  <div
+                    key={question.questionId}
+                    className="mb-6 bg-gray-50 p-3 md:p-4 rounded-lg shadow"
+                  >
+                    <p className="text-base md:text-lg font-medium text-gray-700 mb-4">
+                      {question.question}
                     </p>
-                    <p className="text-sm text-blue-500">
-                      Correct Answer: {result.correctAnswer}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      Explanation: {result.explanation}
-                    </p>
+                    {question.options.map((option, index) => (
+                      <label
+                        key={index}
+                        className="flex items-center space-x-2 mb-3 cursor-pointer bg-white p-2 rounded-lg border hover:border-blue-500 shadow"
+                      >
+                        <input
+                          type="radio"
+                          name={question.questionId}
+                          value={option}
+                          onChange={() => handleOptionChange(question.questionId, option)}
+                          className="accent-blue-500"
+                        />
+                        <span className="text-sm md:text-base">{option}</span>
+                      </label>
+                    ))}
                   </div>
                 ))}
               </div>
+            ))}
+
+            {/* Submit Button */}
+            <div className="text-center">
+              <button
+                onClick={handleSubmit}
+                className="bg-green-500 text-white font-bold py-2 px-4 md:px-6 rounded-lg shadow hover:bg-green-600 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto"
+              >
+                <FaCheckCircle className="text-xl" />
+                <span>Submit Quiz</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {courseData && (
+          <div className="text-center mt-6">
+            <button 
+              onClick={handleViewCourse}
+              className="bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition-all duration-300 flex items-center justify-center gap-2 mx-auto"
+            >
+              <span>View Generated Course</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-lg text-center w-full max-w-2xl mx-4">
+            <h2 className="text-xl md:text-2xl font-bold mb-4">Your Score</h2>
+            <p className="text-lg md:text-xl mb-4">
+              {score}/{results.length}
+            </p>
+            <div className="text-left max-h-[50vh] overflow-y-auto">
+              {results.map((result, index) => (
+                <div key={index} className="mb-4 p-3 bg-gray-50 rounded">
+                  <p className="font-semibold text-sm md:text-base">{result.question}</p>
+                  <p className={`text-xs md:text-sm ${result.isCorrect ? "text-green-500" : "text-red-500"}`}>
+                    Your Answer: {result.userAnswer}
+                  </p>
+                  <p className="text-xs md:text-sm text-blue-500">
+                    Correct Answer: {result.correctAnswer}
+                  </p>
+                  <p className="text-xs md:text-sm text-gray-700">
+                    Explanation: {result.explanation}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="bg-blue-500 text-white p-2 rounded mt-4"
+                className="bg-blue-500 text-white p-2 rounded"
               >
                 Close
               </button>
               <button
                 onClick={() => (setShowModal(false),setShowPerfModal(true))}
-                className="bg-amber-700 ml-10 text-white p-2 rounded mt-4"
+                className="bg-amber-700 text-white p-2 rounded"
               >
-                Your Performance Metrics
+                Performance Metrics
               </button>
               <button
                 onClick={()=>(setShowModal(false),setShowUnitModal(true))}
-                className="bg-emerald-500 ml-10 text-white p-2 rounded mt-4"
-              >
-               Generate a Course
-              </button>
-
-              {courseData ? (<><button onClick={handleViewCourse} className="bg-sky-500 ml-10 text-white p-2 rounded mt-4">VIEW GENERTED COURSE</button></>):(<></>)}
-              
-            </div>
-            
-          </div>
-        )}
-
-        {showPerfModal && (
-          <>
-          <div className="fixed inset-0  bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white mt-16 p-6 rounded shadow-lg text-center">
-              <h2 className="text-xl font-serif mb-5"> PERFOMANCE MODAL </h2>
-              <h2 className="text-lg font-bold">Quiz : {courseTitle} </h2>
-              <h2 className="text-lg font-bold">Your Score : {score}/{results.length} </h2>
-              <p className="text-lg mb-4 font-bold">Time Taken : 15 seconds</p>
-              <p className="text-lg mb-4 font-bold">Your Level : {level}</p>
-
-              <div>
-                {courseRecom ? (<>
-                  <div className="p-6">
-  <h2 className="text-2xl font-bold mb-4 text-gray-800">Recommended Courses</h2>
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-    {courseRecom.recommendations?.map((course, index) => (
-      <div
-        key={index}
-        className="bg-white w-64 shadow-lg rounded-lg p-4 border border-gray-200 hover:shadow-xl transition-shadow"
-      >
-        <h3 className="text-lg font-semibold text-gray-700">
-          {course.subject}
-        </h3>
-        <p className="text-gray-600 mt-2">
-          Focus Area: <span className="text-gray-800">{course.focus_area}</span>
-        </p>
-        <p className="text-gray-600 mt-2">
-          Units: <span className="text-gray-800">{course.units}</span>
-        </p>
-        <button
-                onClick={()=>(handleGenerateCourse())}
-                className="bg-emerald-500 ml-10 text-white p-2 rounded mt-4"
+                className="bg-emerald-500 text-white p-2 rounded"
               >
                 Generate Course
               </button>
-      </div>
-    ))}
-  </div>
-</div>
+            </div>
+          </div>
+        </div>
+      )}
 
-                </>):(<>
-                
-                </>)}
+      {showPerfModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center overflow-y-auto py-10">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-6xl w-full mx-4">
+            <h2 className="text-2xl font-bold mb-8 text-gray-800">Performance Analysis</h2>
+            
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg shadow">
+                <h3 className="text-lg font-bold text-blue-800">Quiz</h3>
+                <p className="text-gray-700 mt-2">{courseTitle}</p>
               </div>
-              
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg shadow">
+                <h3 className="text-lg font-bold text-green-800">Score</h3>
+                <p className="text-gray-700 mt-2">{score}/{results.length}</p>
+              </div>
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg shadow">
+                <h3 className="text-lg font-bold text-yellow-800">Time</h3>
+                <p className="text-gray-700 mt-2">15 seconds</p>
+              </div>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg shadow">
+                <h3 className="text-lg font-bold text-purple-800">Level</h3>
+                <p className="text-gray-700 mt-2">{level}</p>
+              </div>
+            </div>
+
+            {/* Recommended Courses Section */}
+            <div className="mt-8">
+              {courseRecom ? (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6 text-gray-800">Recommended Courses</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[400px] overflow-y-auto p-4">
+                    {courseRecom.recommendations?.map((course, index) => (
+                      <div
+                        key={index}
+                        className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300"
+                      >
+                        <h3 className="text-xl font-semibold text-gray-700 mb-3">
+                          {course.subject}
+                        </h3>
+                        <p className="text-gray-600 mb-2">
+                          Focus Area: <span className="text-gray-800">{course.focus_area}</span>
+                        </p>
+                        <p className="text-gray-600 mb-4">
+                          Units: <span className="text-gray-800">{course.units}</span>
+                        </p>
+                        <button
+                          onClick={() => handleGenerateCourse(course)}
+                          className="bg-emerald-500 w-full text-white p-3 rounded-lg hover:bg-emerald-600 transition-colors"
+                        >
+                          {loading ? (
+                            <div className="flex items-center justify-center">
+                              <QuizLoadingAnimation progress={progress} />
+                              <span className="ml-2">Generating Course...</span>
+                            </div>
+                          ) : (
+                            "Generate Course"
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-center gap-4 mt-8">
               <button
-                onClick={() => setShowPerfModal(false)}
-                className="bg-blue-500 text-white p-2 rounded mt-4"
+                onClick={() => {
+                  setShowPerfModal(false);
+                  setShowModal(true);
+                }}
+                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all duration-300"
               >
-                Close
+                Back to Results
               </button>
-              {/* <button
-                onClick={()=>(setShowPerfModal(false),setShowUnitModal(true))}
-                className="bg-emerald-500 ml-10 text-white p-2 rounded mt-4"
-              >
-                Generate a Course of Quiz
-              </button> */}
-              {courseData ? (<><button onClick={handleViewCourse} className="bg-sky-500 ml-10 text-white p-2 rounded mt-4">VIEW GENERTED COURSE</button></>):(<><button disabled className="bg-sky-500 ml-10 text-white p-2 rounded mt-4">Generating Course</button></>)}
+              
+              {courseData && (
+                <button 
+                  onClick={handleViewCourse} 
+                  className="bg-sky-500 text-white px-6 py-2 rounded-lg hover:bg-sky-600 transition-all duration-300"
+                >
+                  View Generated Course
+                </button>
+              )}
               
               <button
                 onClick={handleGenerateRecom}
-                className="bg-emerald-500 ml-10 text-white p-2 rounded mt-4"
+                className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition-all duration-300"
               >
                 Recommended Courses
               </button>
-              
             </div>
           </div>
-          </>
-        )}
+        </div>
+      )}
 
 
 {showUnitModal && (
-          <>
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
             <div className="bg-white p-6 rounded shadow-lg text-center">
-              <h2 className="text-xl font-serif mb-5"> Generate a Course </h2>
+              <h2 className="text-xl font-serif mb-5">Generate a Course</h2>
               
               <input 
-              value={formData.unit}
-              onChange={(e) => setFormData({...formData,unit:e.target.value})}
-              type="number"
-              placeholder="Enter the number of units you want to generate"
-              className="border w-full p-2 rounded mb-4"
-
+                value={formData.unit}
+                onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                type="number"
+                placeholder="Enter the number of units you want to generate"
+                className="border w-full p-2 rounded mb-4"
               />
               <input
-              value={formData.focus_area}
-              onChange={(e) => setFormData({...formData,focus_area:e.target.value})}
-              type="text"
-              placeholder="Enter the focus area of the course"
-              className="border w-full p-2 rounded mb-4"
+                value={formData.focus_area}
+                onChange={(e) => setFormData({...formData, focus_area: e.target.value})}
+                type="text"
+                placeholder="Enter the focus area of the course"
+                className="border w-full p-2 rounded mb-4"
               />
-             
               
-              <button
-                onClick={() => setShowUnitModal(false)}
-                className="bg-blue-500 text-white p-2 rounded mt-4"
-              >
-                Close
-              </button>
-              <button
-                onClick={()=>handleGenerateCourse()}
-                className="bg-emerald-500 ml-10 text-white p-2 rounded mt-4"
-              >
-                {loading ? (<>GENERATING</>) : (<>Generate</>)}
-              </button>
-              {courseData ? (<><button onClick={handleViewCourse} className="bg-sky-500 ml-10 text-white p-2 rounded mt-4">VIEW GENERTED COURSE</button></>):(<></>)}
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowUnitModal(false)}
+                  className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-all"
+                >
+                  Close
+                </button>
+                
+                <button
+                  onClick={handleGenerateCourse}
+                  className="bg-emerald-500 text-white p-2 rounded hover:bg-emerald-600 transition-all"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <div className="flex flex-col items-center">
+                        <span>Generating Course</span>
+                        <div className="w-full bg-emerald-300 rounded-full h-2 mt-1">
+                          <div 
+                            className="bg-white h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm">{progress}%</span>
+                      </div>
+                    </div>
+                  ) : (
+                    "GENERATING"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-          </>
         )}
-      </div>
-    </>
+    </div>
   );
 };
 

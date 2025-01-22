@@ -170,14 +170,26 @@ const AICuratedCourse = () => {
     }
   };
 
+  const handleClear = () => {
+    setChatMessages([{ type: "bot", message: questions[0] }]);
+    setCurrentStep(0);
+    setFormData({ subject: "", focus_area: "", difficulty: "", units: null });
+  };
+
+  const handleGenerateNew = () => {
+    setChatMessages([{ type: "bot", message: questions[0] }]);
+    setCurrentStep(0);
+    setFormData({ subject: "", focus_area: "", difficulty: "", units: null });
+  };
+
   return (
     <div className="bg-gray-50 pb-24 rounded-lg shadow-lg">
-    <StudentHeader/>
+      <StudentHeader/>
       <h2 className="text-3xl font-semibold mt-10 text-center text-blue-600 mb-4">
         AI Curated Course Chatbot
       </h2>
-      <div className="bg-white p-4 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <div className="chat-container h-96 overflow-y-auto p-4 border">
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
+        <div className="chat-container h-96 overflow-y-auto p-4 border rounded-lg">
           {chatMessages.map((msg, index) => (
             <div
               key={index}
@@ -192,20 +204,10 @@ const AICuratedCourse = () => {
           ))}
 
           {loading && <QuizLoadingAnimation progress={progress} />}
-
-          {courseData && (
-            <div className="text-center mt-4">
-              <button
-                onClick={handleViewCourse}
-                className="bg-emerald-500 text-white px-4 py-2 rounded-lg"
-              >
-                View Generated Course
-              </button>
-            </div>
-          )}
         </div>
+
         {!courseData && (
-          <form onSubmit={handleSendMessage} className="mt-4 flex">
+          <form onSubmit={handleSendMessage} className="mt-4 flex flex-col md:flex-row gap-2">
             <input
               type="text"
               name="userMessage"
@@ -213,20 +215,42 @@ const AICuratedCourse = () => {
               className="flex-grow p-2 border rounded-lg"
               disabled={loading}
             />
-            <button
-              type="submit"
-              className="ml-2 bg-blue-500 text-white p-2 rounded-lg"
-              disabled={loading}
-            >
-              Send
-            </button>
-            <button
-            onClick={()=> (setChatMessages([{ type: "bot", message: questions[0] }]),setCurrentStep(0) ,setFormData({subject:"",focus_area:"",difficulty:"",units:null}))}
-              className="ml-2 bg-red-500 text-white p-2 rounded-lg"
-            >
-              Clear
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="bg-blue-500 text-white p-2 rounded-lg w-full md:w-auto"
+                disabled={loading}
+              >
+                Send
+              </button>
+              <button
+                onClick={handleClear}
+                className="bg-red-500 text-white p-2 rounded-lg w-full md:w-auto"
+              >
+                Clear
+              </button>
+            </div>
           </form>
+        )}
+
+        {courseData && (
+          <div className="flex flex-col items-center gap-4 mt-6">
+            <button
+              onClick={handleViewCourse}
+              className="bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>View Generated Course</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <button
+              onClick={handleGenerateNew}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all duration-300"
+            >
+              Generate New Course
+            </button>
+          </div>
         )}
       </div>
     </div>
