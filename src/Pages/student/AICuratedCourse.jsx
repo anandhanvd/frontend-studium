@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaArrowCircleUp, FaArrowCircleDown, FaArrowDown, FaArrowUp, FaArrowRight } from "react-icons/fa";
 import StudentHeader from '../../components/StudentHeader'
+import QuizLoadingAnimation from '../../components/QuizLoadingAnimation';
+
 const AICuratedCourse = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const navigate = useNavigate();
@@ -24,6 +26,8 @@ const AICuratedCourse = () => {
   const [openTopics, setOpenTopics] = useState({});
   const [openResources, setOpenResources] = useState({});
   const [openAssignment, setOpenAssignment] = useState({});
+  const [progress, setProgress] = useState(0);
+
   const handleViewCourse = () => {
     navigate('/generated-course', { state: { courseData } });
   };
@@ -122,15 +126,48 @@ const AICuratedCourse = () => {
     }
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    const inputField = e.target.elements.userMessage;
-    const userMessage = inputField.value.trim();
+    const message = e.target.userMessage.value;
+    e.target.userMessage.value = "";
 
-    if (!userMessage) return;
+    try {
+      setLoading(true);
+      setProgress(0);
+      
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
 
-    handleUserResponse(userMessage);
-    inputField.value = "";
+      // Add user message to chat
+      setChatMessages([...chatMessages, { type: "user", message }]);
+
+      const response = await axios.post(
+        "https://ml-mvqr.onrender.com/course/generate-course",
+        { message, currentStep }
+      );
+
+      clearInterval(progressInterval);
+      setProgress(100);
+      
+      setCourseData(response.data);
+      
+      setTimeout(() => {
+        setLoading(false);
+        setProgress(0);
+      }, 500);
+
+    } catch (error) {
+      console.error("Error:", error);
+      setLoading(false);
+      setProgress(0);
+    }
   };
 
   return (
@@ -154,16 +191,18 @@ const AICuratedCourse = () => {
             </div>
           ))}
 
-{courseData && (
-      <div className="text-center mt-4">
-        <button
-          onClick={handleViewCourse}
-          className="bg-emerald-500 text-white px-4 py-2 rounded-lg"
-        >
-          View Generated Course
-        </button>
-      </div>
-    )}
+          {loading && <QuizLoadingAnimation progress={progress} />}
+
+          {courseData && (
+            <div className="text-center mt-4">
+              <button
+                onClick={handleViewCourse}
+                className="bg-emerald-500 text-white px-4 py-2 rounded-lg"
+              >
+                View Generated Course
+              </button>
+            </div>
+          )}
         </div>
         {!courseData && (
           <form onSubmit={handleSendMessage} className="mt-4 flex">

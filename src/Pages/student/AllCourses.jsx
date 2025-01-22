@@ -7,6 +7,7 @@ import { FiBookOpen } from "react-icons/fi";
 import { IoIosArrowForward } from "react-icons/io";
 import { PiCarProfile, PiFileRsDuotone, PiPerson } from "react-icons/pi";
 import { IoEllipsisHorizontalCircleOutline } from "react-icons/io5";
+import QuizLoadingAnimation from '../../components/QuizLoadingAnimation';
 
 const AllCourses = () => {
   const navigate = useNavigate();
@@ -59,19 +60,45 @@ const AllCourses = () => {
       setUserInput("");
     };
   
+    const [progress, setProgress] = useState(0);
+
     const fetchQuiz = async () => {
       try {
         setLoading(true);
+        setProgress(0);
+        
+        // Start progress animation
+        const progressInterval = setInterval(() => {
+          setProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval);
+              return 90;
+            }
+            return prev + 10;
+          });
+        }, 500);
+
         const response = await axios.post(
           "https://fullcoursegen-cvil.onrender.com/generate-question",
           formData
         );
+        
+        // Complete the progress
+        clearInterval(progressInterval);
+        setProgress(100);
+        
         setQuizData(response.data.units[0].assessment.unitAssessment);
-        console.log("Quiz Data : ", response.data)
-        setCourseTitle(response.data.courseTitle)
-        setLoading(false);
+        console.log("Quiz Data : ", response.data);
+        setCourseTitle(response.data.courseTitle);
+        
+        setTimeout(() => {
+          setLoading(false);
+          setProgress(0);
+        }, 500);
       } catch (error) {
         console.error("Error fetching quiz data:", error);
+        setLoading(false);
+        setProgress(0);
       }
     };
 
@@ -222,7 +249,7 @@ const AllCourses = () => {
             </div>
           )}
 
-          {loading ? (<><p className="text-black text-center mt-4">Generating quiz...</p></>):(<></>)}
+           {loading && <QuizLoadingAnimation progress={progress} />}
         </div>
         </div>
         {quizData.length > 0 && (

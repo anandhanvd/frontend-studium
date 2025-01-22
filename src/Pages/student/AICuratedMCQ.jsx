@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { FaClock, FaCheckCircle } from "react-icons/fa";
 import { ToastContainer, toast } from 'react-toastify';
 import { useLocation } from "react-router-dom";
+import QuizLoadingAnimation from '../../components/QuizLoadingAnimation';
 
 const AICuratedMCQ = () => {
   const location = useLocation();
@@ -50,6 +51,7 @@ const AICuratedMCQ = () => {
   ]);
   const [level, setLevel] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
+  const [progress, setProgress] = useState(0);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -93,10 +95,28 @@ const AICuratedMCQ = () => {
   const fetchQuiz = async () => {
     try {
       setLoading(true);
+      setProgress(0);
+      
+      // Start progress animation
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
+
       const response = await axios.post(
         "https://ml-mvqr.onrender.com/mcq/generate-question",
         formData
       );
+      
+      // Complete the progress
+      clearInterval(progressInterval);
+      setProgress(100);
+      
       setQuizData(response.data.units[0].assessment.unitAssessment);
       console.log("Quiz Data : ", response.data)
       
@@ -279,7 +299,7 @@ const AICuratedMCQ = () => {
             </div>
           )}
 
-          {loading && <p className="text-black text-center mt-4">Generating quiz...</p>}
+          {loading && <QuizLoadingAnimation progress={progress} />}
         </div>
 
         {quizData.length > 0 && (

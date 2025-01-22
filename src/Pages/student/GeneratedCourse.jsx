@@ -8,6 +8,7 @@ import StudentHeader from '../../components/StudentHeader';
 import Chatbot from '../../components/Chatbot';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
+import QuizLoadingAnimation from '../../components/QuizLoadingAnimation';
 
 
 const GeneratedCoursePage = () => {
@@ -25,6 +26,7 @@ const [domainData, setDomainData] = useState({});
 const [courseSaved, setCourseSaved] = useState(false);
 const user = JSON.parse(localStorage.getItem("user"));
 const userId = user._id;
+const [progress, setProgress] = useState(0);
 
   const getDomains = async () => {
     try {
@@ -130,27 +132,49 @@ const toggleUnit = (index) => {
   };
 
   const fetchMasterQuiz = async () => {
-
     const formData = {
-      subject:courseData.courseTitle,
-      focus_area:courseData.courseTitle,
-      difficulty:"easy",
-      units:1
+      subject: courseData.courseTitle,
+      focus_area: courseData.courseTitle,
+      difficulty: "easy",
+      units: 1
     }
 
     try {
       setLoading(true);
+      setProgress(0);
+      
+      // Start progress animation
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
+
       const response = await axios.post(
         "https://fullcoursegen-cvil.onrender.com/generate-question",
         formData
       );
+      
+      // Complete the progress
+      clearInterval(progressInterval);
+      setProgress(100);
+      
       setQuizData(response.data.units[0].assessment.unitAssessment);
-      console.log("Quiz Data : ", response.data)
-      setCourseTitle(response.data.courseTitle)
-      setLoading(false);
+      console.log("Quiz Data : ", response.data);
+      setCourseTitle(response.data.courseTitle);
+      
+      setTimeout(() => {
+        setLoading(false);
+        setProgress(0);
+      }, 500);
     } catch (error) {
-      setLoading(false);
       console.error("Error fetching quiz data:", error);
+      setLoading(false);
+      setProgress(0);
     }
   };
 
@@ -413,7 +437,9 @@ const [openUnits, setOpenUnits] = useState({});
 >
   {courseSaved ? "Saved" : "Save Course"}
 </button>
-    <button onClick={()=>fetchMasterQuiz()} className='bg-green-200 hover:bg-green-400 transition-all duration-300 p-2 rounded-lg'> {loading ? (<> Generating </>) : (<> Generate Master Quiz </>)} </button>
+<button onClick={()=>fetchMasterQuiz()} className='bg-green-200 hover:bg-green-400 transition-all duration-300 p-2 rounded-lg'> 
+  {loading ? (<QuizLoadingAnimation progress={progress} />) : (<> Generate Master Quiz </>)} 
+</button>
     </div>
     )}
     {quizData.length > 0 && (
