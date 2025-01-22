@@ -29,7 +29,15 @@ const Login = () => {
       });
       localStorage.setItem("user", JSON.stringify(response.data.user));
       if (response?.data?.success) {
-        navigate("/home");
+        if (role === 'teacher' && !response.data.user.isApproved) {
+          setErrorMessage('Teacher approval pending');
+          return;
+        }
+        if (role === 'teacher') {
+          navigate("/course");
+        } else {
+          navigate("/home");
+        }
       }
     } catch (error) {
       // Handle login error
@@ -77,7 +85,6 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
             <div className="mb-6">
               <select
                 className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
@@ -87,6 +94,7 @@ const Login = () => {
                 <option hidden>Select your role</option>
                 <option value="admin">Admin</option>
                 <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
               </select>
             </div>
 
@@ -113,6 +121,7 @@ const Login = () => {
                 Register
               </Link>
             </p>
+
           </form>
         </div>
       </div>

@@ -8,6 +8,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
 
   // State to handle errors or success
   const [error, setError] = useState("");
@@ -30,6 +31,7 @@ const Register = () => {
         name,
         email,
         password,
+        role,
       });
       if (response?.data?.user) {
         setLoading(false);
@@ -98,7 +100,21 @@ const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
+                Role
+              </label>
+              <select
+                id="role"
+                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option hidden>Select your role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+              </select>
+            </div>
             <div className="flex items-center justify-between">
               <button
                 type="submit"
@@ -118,6 +134,7 @@ const Register = () => {
               </Link>
             </p>
           </form>
+
         </div>
       </div>
     </div>

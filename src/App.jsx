@@ -17,7 +17,7 @@ import Profile from "./Pages/student/Profile";
 import GeneratedCoursePage from "./Pages/student/GeneratedCourse";
 import Content from "./Pages/admin/Content";
 import StudentsProfile from "./Pages/admin/StudentsProfile";
-
+import ApproveTeachers from "./Pages/admin/ApproveTeachers";
 const App = () => {
   return (
     <BrowserRouter>
@@ -39,6 +39,8 @@ const App = () => {
         <Route path="/singleCourse" element={<SingleCourse />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/generated-course" element={<GeneratedCoursePage/>} />
+        <Route path="/approve-Teachers" element={<ApproveTeachers />} />
+
       </Routes>
     </BrowserRouter>
   );

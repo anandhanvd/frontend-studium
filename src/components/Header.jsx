@@ -32,6 +32,9 @@ const Header = () => {
           >
             Content Labelling
           </Link>
+          <Link to="/approve-teachers" className="text-white hover:text-yellow-300 transition duration-300">
+  Teachers
+</Link>
         </nav>
 
         {/* Logout Button */}
