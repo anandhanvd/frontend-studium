@@ -30,7 +30,7 @@ const userId = user._id;
     try {
       const domainData = await axios.post(
         "https://aistudiumb-9jub.onrender.com/domains/search",
-        { domainName: "s" }
+        { domainName: courseData.courseTitle }
       );
       console.log("Domains fetched:", domainData.data);
       setDomainData(domainData.data);
@@ -106,13 +106,12 @@ const toggleUnit = (index) => {
     });
 
   const fetchQuiz = async (index) => {
-
     const formData = {
-      subject:courseData.courseTitle,
-      focus_area:courseData.units[index].unitTitle,
-      difficulty:"easy",
-      units:1
-    }
+      subject: courseData.courseTitle,
+      focus_area: courseData.units[index].unitTitle,
+      difficulty: "easy",
+      units: 1
+    };
 
     try {
       setLoading(true);
@@ -121,8 +120,8 @@ const toggleUnit = (index) => {
         formData
       );
       setQuizData(response.data.units[0].assessment.unitAssessment);
-      console.log("Quiz Data : ", response.data)
-      setCourseTitle(response.data.courseTitle)
+      console.log("Quiz Data: ", response.data);
+      setCourseTitle(response.data.courseTitle);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -157,7 +156,7 @@ const toggleUnit = (index) => {
 
   const handleQuizRedirect = () => {
     navigate('/aiMCQ', { state: { quizData, courseTitle, formData } });
-  }
+  };
 
   const handleCheckboxChange = (index) => {
     setUnitCompletion((prev) => ({
@@ -335,7 +334,7 @@ const [openUnits, setOpenUnits] = useState({});
       {domainData.documents?.map((doc, index) => (
         <li key={index} className="mb-2">
           <a
-            href={`/${doc}`} // Update this URL based on your routing or file path logic
+            href={`/${doc}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 hover:underline"

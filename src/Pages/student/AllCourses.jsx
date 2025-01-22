@@ -143,7 +143,7 @@ const AllCourses = () => {
         <h1 className="text-3xl font-extrabold text-center mb-8 text-indigo-600">
           All Courses
         </h1>
-        <button onClick={()=> navigate("/enrolled")} className="bg-indigo-400 text-white p-2 absolute end-0 mr-[600px] -translate-y-16  hover:bg-indigo-600 transition-all duration-300 rounded-lg shadow-xl"> Your Enrolled Courses</button>
+        {/* <button onClick={()=> navigate("/enrolled")} className="bg-indigo-400 text-white p-2 absolute end-0 mr-[600px] -translate-y-16  hover:bg-indigo-600 transition-all duration-300 rounded-lg shadow-xl"> Your Enrolled Courses</button> */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses?.length > 0 ? (
             courses?.map((course) => (

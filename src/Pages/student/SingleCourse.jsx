@@ -1,25 +1,32 @@
 import React, { useEffect, useState } from "react";
 import StudentHeader from "../../components/StudentHeader";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SingleCourse = () => {
+  const navigate = useNavigate();
   const id = JSON.parse(localStorage.getItem("userSelectedCourse"));
   const [courseData, setCourseData] = useState(null);
   const [domaindata, setDomainData] = useState("");
   const [courseName, setCourseName] = useState("");
+
+  const handleQuizSelection = (quiz) => {
+    localStorage.setItem("userQuiz", JSON.stringify(quiz._id));
+    navigate("/singleQuiz");
+  };
+
   const fetchDomains = async (domainName) => {
     try {
       const data = await axios.post(
         "https://aistudiumb-9jub.onrender.com/domains/search",
-        { domainName }
+        { domainName: courseName }
       );
-      setDomainData(data)
-      console.log(data)
+      setDomainData(data);
+      console.log(data);
     } catch (error) {
       console.error("Error fetching course data:", error);
     }
   };
-
 
   // Fetch course data
   const getSingleCourse = async () => {
@@ -96,8 +103,6 @@ const SingleCourse = () => {
           </div>
         </div>
 
-
-
         {/* Video Lectures */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-3xl font-semibold mb-4 text-gray-800">
@@ -154,7 +159,7 @@ const SingleCourse = () => {
             {courseData.quizes.map((quiz, index) => (
               <li key={index} className="mb-2">
                 <button
-                  onClick={() => console.log("Quiz selected", quiz)}
+                  onClick={() => handleQuizSelection(quiz)}
                   className="text-blue-500 hover:underline"
                 >
                   {quiz.quizName}
@@ -166,7 +171,7 @@ const SingleCourse = () => {
         <div className="bg-white mt-10 rounded-lg shadow-lg p-6">
           <h2 className="text-3xl font-semibold mb-4 text-gray-800">Recommended Notes</h2>
           <ul className="list-disc list-inside text-gray-600">
-            {courseData.notes.map((note, index) => (
+            {domaindata.notes?.map((note, index) => (
               <li key={index} className="mb-2">
                 <a
                   href={note}

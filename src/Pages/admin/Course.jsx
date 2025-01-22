@@ -3,9 +3,14 @@ import axios from "axios";
 import Header from "../../components/Header";
 import { useNavigate } from "react-router-dom";
 import { IoReload } from "react-icons/io5";
+import FilePreview from './FilePreview'; // Adjust the path as needed
+import { toast } from "react-hot-toast";
 
 const Course = () => {
   const navigate = useNavigate();
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [fileDetails, setFileDetails] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false); // Modal for course details
   const [courseName, setCourseName] = useState("");
@@ -21,6 +26,8 @@ const Course = () => {
   const [apiResponse, setApiResponse] = useState("");
   const [isDomainPopupVisible, setIsDomainPopupVisible] = useState(true); // Control visibility
   const [domainData, setDomainData] = useState({});
+  const [showFileDetails, setShowFileDetails] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const getDomains = async () => {
     try {
@@ -39,6 +46,8 @@ const Course = () => {
   // Open/Close Modal for adding a course
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
+    setFileDetails([]);
+    setSelectedDocument(null);
   };
 
   // Open/Close Modal for course details
@@ -62,38 +71,86 @@ const Course = () => {
   const handleImage = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "vqohpgdn"); // Replace with your Cloudinary preset
-    formData.append("cloud_name", "dcigsqglj"); // Replace with your Cloudinary cloud name
+    formData.append("upload_preset", "vqohpgdn");
+    formData.append("cloud_name", "dcigsqglj");
 
     try {
       const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dcigsqglj/image/upload", // Replace with your Cloudinary endpoint
+        "https://api.cloudinary.com/v1_1/dcigsqglj/image/upload",
         formData
       );
-      const imageUrl = response.data.secure_url; // Get the secure URL of the uploaded image
-      setImage(imageUrl); // Update state with the image URL
-      
+      const imageUrl = response.data.secure_url;
+      setImage(imageUrl);
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Failed to upload image. Please try again.");
     }
   };
 
-  // Upload Notes File to Cloudinary
   const uploadNotes = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "vqohpgdn"); // Replace with your Cloudinary preset
-    formData.append("resource_type", "raw");
+    setShowFileDetails(true);
+    setIsAnalyzing(true);
+
+    const fileType = file.name.split('.').pop().toLowerCase();
+    const allowedTypes = ['pdf', 'doc', 'docx', 'ppt', 'pptx'];
+
+    if (!allowedTypes.includes(fileType)) {
+      toast.error('Please upload PDF, DOC, DOCX, PPT, or PPTX files only');
+      setIsAnalyzing(false);
+      return;
+    }
 
     try {
-      const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dcigsqglj/auto/upload", // Replace with your Cloudinary endpoint
-        formData
+      const cloudinaryFormData = new FormData();
+      cloudinaryFormData.append("file", file);
+      cloudinaryFormData.append("upload_preset", "vqohpgdn");
+      cloudinaryFormData.append("resource_type", "raw");
+
+      const uploadResponse = await axios.post(
+        "https://api.cloudinary.com/v1_1/dcigsqglj/raw/upload",
+        cloudinaryFormData
       );
-      setNotes([...notes, response.data.url]);
+
+      try {
+        const analysisResponse = await axios.post(
+          "https://ml-mvqr.onrender.com/content/detect-domain-from-file",
+          {
+            file_url: uploadResponse.data.secure_url
+          }
+        );
+
+        setFileDetails(prev => [...prev, {
+          fileName: file.name,
+          fileUrl: uploadResponse.data.secure_url,
+          domain: analysisResponse.data.domain || 'Unknown',
+          subdomain: analysisResponse.data.subdomain || 'Unknown',
+          explanation: analysisResponse.data.explanation || '',
+          uploaded: true,
+          isEditing: false
+        }]);
+
+        setNotes(prev => [...prev, uploadResponse.data.secure_url]);
+        toast.success("File analyzed successfully");
+      } catch (analysisError) {
+        console.error("Analysis error:", analysisError);
+        setFileDetails(prev => [...prev, {
+          fileName: file.name,
+          fileUrl: uploadResponse.data.secure_url,
+          domain: 'Unknown',
+          subdomain: 'Unknown',
+          explanation: '',
+          uploaded: true,
+          isEditing: true
+        }]);
+
+        setNotes(prev => [...prev, uploadResponse.data.secure_url]);
+        toast.warning("Please classify this document manually");
+      }
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Upload error:", error);
+      toast.error(`Upload failed: ${error.message}`);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -143,7 +200,6 @@ const Course = () => {
     }
   };
 
-  // Submit Form
   const submitCourse = async () => {
     const courseData = {
       courseName,
@@ -154,7 +210,7 @@ const Course = () => {
       description,
       content
     };
-
+  
     try {
       await axios.post(
         "https://aistudiumb-9jub.onrender.com/course/createCourse",
@@ -202,13 +258,131 @@ const Course = () => {
     }
   };
 
-  const handleQuiz = async (id) => {
-    try {
-      localStorage.setItem("courseID", JSON.stringify(id));
-      navigate("/quiz");
-    } catch (error) {
-      console.log(error);
-    }
+  const handleQuiz = (courseId) => {
+    localStorage.setItem("courseID", JSON.stringify(courseId));
+    navigate("/quiz");
+  };
+
+  const renderFileDetails = () => {
+    return fileDetails.map((file, index) => (
+      <div key={index}>
+        <button onClick={() => setSelectedDocument(file.fileUrl)}>Preview</button>
+        <a href={file.fileUrl} target="_blank" rel="noopener noreferrer">Open</a>
+        <input
+          type="text"
+          value={file.domain}
+          onChange={(e) => updateFileDomain(index, 'domain', e.target.value)}
+          placeholder="Enter domain"
+        />
+        <input
+          type="text"
+          value={file.subdomain}
+          onChange={(e) => updateFileDomain(index, 'subdomain', e.target.value)}
+          placeholder="Enter subdomain"
+        />
+      </div>
+    ));
+  };
+
+  const updateFileDomain = (index, field, value) => {
+    const updatedDetails = [...fileDetails];
+    updatedDetails[index][field] = value;
+    setFileDetails(updatedDetails);
+  };
+
+  const renderDocumentPreview = () => {
+    if (!selectedDocument) return null;
+
+    return (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white rounded-lg w-3/4 max-w-3xl p-6 shadow-lg">
+          <button
+            onClick={() => setSelectedDocument(null)}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 mb-4"
+          >
+            Close Preview
+          </button>
+          <FilePreview fileUrl={selectedDocument} />
+        </div>
+      </div>
+    );
+  };
+
+  const renderSeeMoreModal = () => {
+    if (!selectedCourse) return null;
+
+    return (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white rounded-lg w-3/4 max-w-4xl p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">{selectedCourse.courseName}</h2>
+            <button
+              onClick={() => setSelectedCourse(null)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+
+          <p className="mb-4">{selectedCourse.description}</p>
+          <p className="mb-4">{selectedCourse.content}</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Course Notes</h3>
+              <div className="space-y-4">
+                {selectedCourse.notes?.map((note, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Document {index + 1}</h4>
+                    <div className="flex justify-between items-center">
+                      <button
+                        onClick={() => setSelectedDocument(note)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Preview Document
+                      </button>
+                      <div className="space-x-4">
+                        <a
+                          href={note}
+                          download
+                          className="text-green-500 hover:text-green-700"
+                        >
+                          Download
+                        </a>
+                        <a
+                          href={note}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          Open in new tab
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Course Videos</h3>
+              <div className="space-y-4">
+                {selectedCourse.videos?.map((video, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <video 
+                      src={video} 
+                      controls 
+                      className="w-full rounded-lg"
+                      preload="metadata"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -269,7 +443,7 @@ const Course = () => {
                     See More
                   </button>
                   <button
-                    onClick={() => toggleCourseModal(course)}
+                    onClick={() => handleQuiz(course._id)}
                     className="bg-violet-500 text-white px-4 py-2 rounded-lg hover:bg-violet-600 transition duration-300"
                   >
                     Add Quiz
@@ -442,6 +616,8 @@ const Course = () => {
                 Submit
               </button>
             </div>
+
+            {renderFileDetails()}
           </div>
         </div>
       )}
@@ -524,7 +700,7 @@ const Course = () => {
             <div className="flex justify-end mt-6 gap-5">
               <button
                 onClick={() => handleQuiz(selectedCourse._id)}
-                className="bg-green-400 text-white px-4 py-2 rounded-lg hover:bg-green-500 transition duration-300"
+                className="bg-violet-500 text-white px-4 py-2 rounded-lg hover:bg-violet-600 transition duration-300"
               >
                 Add Quiz
               </button>
@@ -538,6 +714,10 @@ const Course = () => {
           </div>
         </div>
       )}
+
+      {renderSeeMoreModal()}
+
+      {renderDocumentPreview()}
     </>
   );
 };
