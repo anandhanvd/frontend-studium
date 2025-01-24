@@ -9,6 +9,7 @@ import Chatbot from '../../components/Chatbot';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import QuizLoadingAnimation from '../../components/QuizLoadingAnimation';
+import FormattedContent from '../../components/FormattedContent';
 
 
 const GeneratedCoursePage = () => {
@@ -314,9 +315,9 @@ const [openUnits, setOpenUnits] = useState({});
         <h4 className="text-xl font-semibold text-gray-800 mb-2">
           {unit.detailedContent.topicContents[currentTopicIndex].topic}
         </h4>
-        <p className="text-gray-600">
-          {unit.detailedContent.topicContents[currentTopicIndex].content}
-        </p>
+        <div className="text-gray-600">
+          <FormattedContent content={unit.detailedContent.topicContents[currentTopicIndex].content} />
+        </div>
         {/* Examples and Exercises */}
         <div className="grid grid-cols-2 gap-4 mt-4">
           {/* Examples */}

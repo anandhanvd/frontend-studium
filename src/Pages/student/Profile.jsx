@@ -81,6 +81,18 @@ const Profile = () => {
     ],
   };
 
+  const getEnrolledCourseProgress = (courseId) => {
+    try {
+      const progressData = localStorage.getItem(`enrolled-course-${courseId}-progress`);
+      if (progressData) {
+        const { completed } = JSON.parse(progressData);
+        return completed || 0;
+      }
+    } catch (error) {
+      console.error('Error getting enrolled course progress:', error);
+    }
+    return 0;
+  };
 
   return (
     <>
@@ -92,19 +104,7 @@ const Profile = () => {
         {enrolledCourses.length > 0 ? (
           <div className="space-y-6">
             {enrolledCourses.map((course, index) => {
-              // Validate and convert completionPercentage to a valid number
-              let completionPercentage = parseFloat(course?.completed);
-
-            
-              
-
-              // If it's NaN, set it to 0
-              if (isNaN(completionPercentage)) {
-                completionPercentage = 0;
-              }
-
-              // Round it down to an integer
-              completionPercentage = Math.floor(completionPercentage);
+              const completionPercentage = getEnrolledCourseProgress(course?.course?._id) || 0;
 
               return (
                 <div

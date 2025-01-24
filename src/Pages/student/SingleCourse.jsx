@@ -9,6 +9,7 @@ const SingleCourse = () => {
   const [courseData, setCourseData] = useState(null);
   const [domaindata, setDomainData] = useState("");
   const [courseName, setCourseName] = useState("");
+  const [completedSections, setCompletedSections] = useState({});
 
   const handleQuizSelection = (quiz) => {
     localStorage.setItem("userQuiz", JSON.stringify(quiz._id));
@@ -42,6 +43,40 @@ const SingleCourse = () => {
     }
   };
 
+  // Calculate and update progress
+  const updateProgress = () => {
+    const totalSections = 4; // Content, Videos, YouTube Videos, and Quiz sections
+    const completedCount = Object.values(completedSections).filter(Boolean).length;
+    const progress = Math.floor((completedCount / totalSections) * 100);
+
+    const progressData = {
+      courseId: id,
+      completed: progress,
+      completedSections,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem(`enrolled-course-${id}-progress`, JSON.stringify(progressData));
+  };
+
+  const handleMarkComplete = (section) => {
+    setCompletedSections(prev => ({
+      ...prev,
+      [section]: true
+    }));
+    updateProgress();
+  };
+
+  // Load saved progress from localStorage
+  useEffect(() => {
+    if (id) {
+      const savedProgress = localStorage.getItem(`enrolled-course-${id}-progress`);
+      if (savedProgress) {
+        const { completedSections: saved } = JSON.parse(savedProgress);
+        setCompletedSections(saved || {});
+      }
+    }
+  }, [id]);
+
   useEffect(() => {
     getSingleCourse();
     
@@ -71,15 +106,39 @@ const SingleCourse = () => {
       <div className="container mx-auto p-8 mt-8">
         {/* Course Content */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-3xl font-semibold mb-4 text-gray-800">Content</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold text-gray-800">Content</h2>
+            <button
+              onClick={() => handleMarkComplete('content')}
+              disabled={completedSections['content']}
+              className={`px-4 py-2 rounded-lg ${
+                completedSections['content']
+                  ? 'bg-green-200 text-green-800'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {completedSections['content'] ? 'Completed ✓' : 'Mark as Complete'}
+            </button>
+          </div>
           <p className="text-gray-600">{courseData.content}</p>
         </div>
 
         {/* Video Lectures */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-3xl font-semibold mb-4 text-gray-800">
-            Uploaded Lectures
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold text-gray-800">Uploaded Lectures</h2>
+            <button
+              onClick={() => handleMarkComplete('videos')}
+              disabled={completedSections['videos']}
+              className={`px-4 py-2 rounded-lg ${
+                completedSections['videos']
+                  ? 'bg-green-200 text-green-800'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {completedSections['videos'] ? 'Completed ✓' : 'Mark as Complete'}
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courseData.videos?.map((video, index) => (
               <div
@@ -103,11 +162,22 @@ const SingleCourse = () => {
           </div>
         </div>
 
-        {/* Video Lectures */}
+        {/* YouTube Lectures */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-3xl font-semibold mb-4 text-gray-800">
-            Youtube Lectures
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold text-gray-800">Youtube Lectures</h2>
+            <button
+              onClick={() => handleMarkComplete('youtube')}
+              disabled={completedSections['youtube']}
+              className={`px-4 py-2 rounded-lg ${
+                completedSections['youtube']
+                  ? 'bg-green-200 text-green-800'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {completedSections['youtube'] ? 'Completed ✓' : 'Mark as Complete'}
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courseData.videoLectures.map((video, index) => (
               <div
@@ -131,11 +201,22 @@ const SingleCourse = () => {
           </div>
         </div>
 
-        {/* Notes */}
+        {/* Course Notes */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-3xl font-semibold mb-4 text-gray-800">
-            Course Notes
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold text-gray-800">Course Notes</h2>
+            <button
+              onClick={() => handleMarkComplete('notes')}
+              disabled={completedSections['notes']}
+              className={`px-4 py-2 rounded-lg ${
+                completedSections['notes']
+                  ? 'bg-green-200 text-green-800'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {completedSections['notes'] ? 'Completed ✓' : 'Mark as Complete'}
+            </button>
+          </div>
           <ul className="list-disc list-inside text-gray-600">
             {courseData.notes.map((note, index) => (
               <li key={index} className="mb-2">
@@ -152,21 +233,39 @@ const SingleCourse = () => {
           </ul>
         </div>
 
-        {/* Quizzes */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-3xl font-semibold mb-4 text-gray-800">Quizzes</h2>
-          <ul className="list-disc list-inside text-gray-600">
-            {courseData.quizes.map((quiz, index) => (
-              <li key={index} className="mb-2">
-                <button
-                  onClick={() => handleQuizSelection(quiz)}
-                  className="text-blue-500 hover:underline"
-                >
-                  {quiz.quizName}
-                </button>
-              </li>
-            ))}
-          </ul>
+        {/* Quiz Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold text-gray-800">Course Quiz</h2>
+            <button
+              onClick={() => handleMarkComplete('quiz')}
+              disabled={completedSections['quiz']}
+              className={`px-4 py-2 rounded-lg ${
+                completedSections['quiz']
+                  ? 'bg-green-200 text-green-800'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {completedSections['quiz'] ? 'Completed ✓' : 'Mark as Complete'}
+            </button>
+          </div>
+          {courseData.quizes && courseData.quizes.length > 0 ? (
+            <div className="space-y-4">
+              {courseData.quizes.map((quiz, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <h3 className="text-xl font-semibold mb-2">{quiz.quizName}</h3>
+                  <button
+                    onClick={() => handleQuizSelection(quiz)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Take Quiz
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600">No quizzes available for this course.</p>
+          )}
         </div>
         <div className="bg-white mt-10 rounded-lg shadow-lg p-6">
           <h2 className="text-3xl font-semibold mb-4 text-gray-800">Recommended Notes</h2>

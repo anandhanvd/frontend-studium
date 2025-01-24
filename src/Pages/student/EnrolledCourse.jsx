@@ -56,6 +56,17 @@ const EnrolledCourse = () => {
   };
 
   const handleViewCourse = (id) => {
+    // Only initialize progress if it doesn't exist
+    const existingProgress = localStorage.getItem(`enrolled-course-${id}-progress`);
+    if (!existingProgress) {
+      const progressData = {
+        courseId: id,
+        completed: 0,
+        completedSections: {},
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem(`enrolled-course-${id}-progress`, JSON.stringify(progressData));
+    }
     localStorage.setItem("userSelectedCourse", JSON.stringify(id));
     navigate("/singleCourse");
   };
