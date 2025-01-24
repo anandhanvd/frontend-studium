@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StudentHeader from "../../components/StudentHeader";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +25,8 @@ const AICuratedMCQ = () => {
   const initialcourseTitle = location.state?.courseTitle;
   const [quizData, setQuizData] = useState(initialQuizData || []); // Initialize state with location data or an empty array
   const [courseTitle, setCourseTitle] = useState(initialcourseTitle || "");
-  const [timeRemaining, setTimeRemaining] = useState(0); // 15 minutes timer (900 seconds)
+  const [timeRemaining, setTimeRemaining] = useState(900); // 15 minutes in seconds
+  const [startTime, setStartTime] = useState(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [quizTimeTaken, setQuizTimeTaken] = useState(null);
   
@@ -101,22 +102,13 @@ const AICuratedMCQ = () => {
       console.log("Quiz Data : ", response.data)
       
       setLoading(false);
-
-      // Start the timer when the quiz is fetched
-    setIsTimerRunning(true);
-    const timerInterval = setInterval(() => {
-      setTimeRemaining((prevTime) => {
-        if (prevTime <= 0) {
-          clearInterval(timerInterval);
-          setIsTimerRunning(false);
-          handleSubmit(); // Auto-submit the quiz when time is up
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
+      
+      // Start timer when quiz loads
+      setStartTime(Date.now());
+      setIsTimerRunning(true);
     } catch (error) {
       console.error("Error fetching quiz data:", error);
+      setLoading(false);
     }
   };
 
@@ -207,15 +199,16 @@ const AICuratedMCQ = () => {
   };
 
   const handleSubmit = () => {
+    setIsTimerRunning(false);
+    
     let correctAnswers = 0;
     const detailedResults = [];
     
     quizData.forEach((topic) => {
       topic.questions.forEach((question) => {
-        const isCorrect =
-          userAnswers[question.questionId] === question.correctAnswer;
+        const isCorrect = userAnswers[question.questionId] === question.correctAnswer;
         if (isCorrect) correctAnswers += 1;
-
+        
         detailedResults.push({
           question: question.question,
           correctAnswer: question.correctAnswer,
@@ -225,20 +218,27 @@ const AICuratedMCQ = () => {
         });
       });
     });
-    const timeTaken = 900 - timeRemaining;
+
+    // Calculate actual time taken in seconds
+    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
     
     const resultData = {
-      title: initialcourseTitle, // Replace with actual quiz title
-      score: correctAnswers,                 // Replace with the user's score
-      timeTaken: timeTaken,// Replace with the time taken in seconds
-      userId: user._id, // Replace with logged-in user's ID
+      title: courseTitle,
+      score: correctAnswers,
+      timeTaken: timeTaken,
+      userId: user._id,
     };
-    console.log("Details : ", resultData)
-    
+
+    // Update levelData with actual score and time
+    setLevelData({
+      score: correctAnswers,
+      time_taken: timeTaken
+    });
+    fetchLevel(); // Call fetchLevel after updating levelData
+
     postQuizResult(resultData);
     setScore(correctAnswers);
     setQuizTimeTaken(timeTaken);
-    fetchLevel(correctAnswers,timeTaken);
     setResults(detailedResults);
     setShowModal(true);
   };
@@ -258,6 +258,35 @@ const AICuratedMCQ = () => {
       toast.warning("Failed to save quiz result. Please try again.");
     }
   };
+
+  useEffect(() => {
+    let timerInterval;
+    if (isTimerRunning && timeRemaining > 0) {
+      timerInterval = setInterval(() => {
+        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = Math.max(900 - elapsedTime, 0);
+        setTimeRemaining(remaining);
+        
+        if (remaining === 0) {
+          clearInterval(timerInterval);
+          handleSubmit();
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [isTimerRunning, startTime]);
+
+  useEffect(() => {
+    if (quizData.length > 0 && !startTime) {
+      setStartTime(Date.now());
+      setIsTimerRunning(true);
+    }
+  }, [quizData]);
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -441,8 +470,8 @@ const AICuratedMCQ = () => {
               </div>
               <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg shadow">
                 <h3 className="text-lg font-bold text-yellow-800">Time</h3>
-                <p className="text-gray-700 mt-2">15 seconds</p>
-              </div>
+                 <p className="text-gray-700 mt-2">{quizTimeTaken} seconds</p>
+                </div>
               <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg shadow">
                 <h3 className="text-lg font-bold text-purple-800">Level</h3>
                 <p className="text-gray-700 mt-2">{level}</p>
