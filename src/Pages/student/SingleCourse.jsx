@@ -47,17 +47,38 @@ const SingleCourse = () => {
 
   // Calculate and update progress
   const updateProgress = () => {
-    const totalSections = 4; // Content, Videos, YouTube Videos, and Quiz sections
-    const completedCount = Object.values(completedSections).filter(Boolean).length;
+    // Get all sections that need to be completed
+    const sections = ['content', 'videos', 'youtubeVideos', 'quiz'];
+    const totalSections = sections.length;
+    
+    // Count completed sections
+    const completedCount = sections.reduce((count, section) => {
+      return completedSections[section] ? count + 1 : count;
+    }, 0);
+
+    // Calculate percentage
     const progress = Math.floor((completedCount / totalSections) * 100);
 
+    // Save progress data
     const progressData = {
       courseId: id,
       completed: progress,
       completedSections,
       lastUpdated: Date.now()
     };
+
+    // Store in localStorage
     localStorage.setItem(`enrolled-course-${id}-progress`, JSON.stringify(progressData));
+
+    // Update the course completion in the enrolled courses list
+    const enrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+    const updatedCourses = enrolledCourses.map(course => {
+      if (course.courseId === id) {
+        return { ...course, completed: progress };
+      }
+      return course;
+    });
+    localStorage.setItem('enrolledCourses', JSON.stringify(updatedCourses));
   };
 
   const handleMarkComplete = (section) => {

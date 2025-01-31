@@ -149,26 +149,37 @@ const Profile = () => {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">Enrolled Courses</h2>
               <div className="space-y-4">
-                {enrolledCourses.map((course, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-semibold text-gray-800">{course?.course?.courseName}</h3>
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        course?.completed > 75 ? 'bg-green-100 text-green-800' :
-                        course?.completed > 50 ? 'bg-blue-100 text-blue-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {Math.floor(course?.completed)}% Complete
-                      </span>
+                {enrolledCourses.map((course, index) => {
+                  // Get progress from localStorage
+                  const progressData = localStorage.getItem(`enrolled-course-${course?.course?._id}-progress`);
+                  let completionPercentage = 0;
+                  
+                  if (progressData) {
+                    const { completed } = JSON.parse(progressData);
+                    completionPercentage = Math.floor(parseFloat(completed));
+                  }
+
+                  return (
+                    <div key={index} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold text-gray-800">{course?.course?.courseName}</h3>
+                        <span className={`px-3 py-1 rounded-full text-sm ${
+                          completionPercentage >= 75 ? 'bg-green-100 text-green-800' :
+                          completionPercentage >= 50 ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {completionPercentage}% Complete
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full transition-all duration-500 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600"
+                          style={{ width: `${completionPercentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full transition-all duration-500 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600"
-                        style={{ width: `${Math.floor(course?.completed)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
