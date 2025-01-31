@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import StudentHeader from "../../components/StudentHeader";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import FilePreview from '../admin/FilePreview';
 
 const SingleCourse = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const SingleCourse = () => {
   const [domaindata, setDomainData] = useState("");
   const [courseName, setCourseName] = useState("");
   const [completedSections, setCompletedSections] = useState({});
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   const handleQuizSelection = (quiz) => {
     localStorage.setItem("userQuiz", JSON.stringify(quiz._id));
@@ -81,6 +83,38 @@ const SingleCourse = () => {
     getSingleCourse();
     
   }, []);
+
+  // Add this function to handle document preview
+  const handlePreview = (url) => {
+    setSelectedDocument(url);
+  };
+
+  // Add this function to close preview
+  const closePreview = () => {
+    setSelectedDocument(null);
+  };
+
+  // Add the preview modal component
+  const renderDocumentPreview = () => {
+    if (!selectedDocument) return null;
+
+    return (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg w-3/4 max-w-4xl p-6 shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold">Document Preview</h3>
+            <button
+              onClick={closePreview}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+          <FilePreview fileUrl={selectedDocument} />
+        </div>
+      </div>
+    );
+  };
 
   if (!courseData) {
     return <div>Loading...</div>;
@@ -217,20 +251,29 @@ const SingleCourse = () => {
               {completedSections['notes'] ? 'Completed ✓' : 'Mark as Complete'}
             </button>
           </div>
-          <ul className="list-disc list-inside text-gray-600">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {courseData.notes.map((note, index) => (
-              <li key={index} className="mb-2">
-                <a
-                  href={note}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  Download Note {index + 1}
-                </a>
-              </li>
+              <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                <p className="text-gray-600 mb-2">Document {index + 1}</p>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handlePreview(note)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
+                  >
+                    Preview
+                  </button>
+                  <a
+                    href={note}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors"
+                  >
+                    Download
+                  </a>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
         {/* Quiz Section */}
@@ -285,6 +328,9 @@ const SingleCourse = () => {
           </ul>
         </div>
       </div>
+
+      {/* Render the preview modal */}
+      {renderDocumentPreview()}
     </>
   );
 };

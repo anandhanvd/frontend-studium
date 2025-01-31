@@ -63,94 +63,115 @@ const StudentsProfile = () => {
 
   return (
     <>
-      <Header/>
-      <h1 className="text-5xl text-center font-bold text-blue-500 font-sans mt-5">
-      Student - {user.name}
-      </h1>
-      <div className="container max-w-4xl mt-8 mx-auto bg-gradient-to-r from-sky-200 rounded-lg to-lime-200 p-8">
-        
-        <h2 className="text-3xl font-semibold text-center mb-8 text-blue-600">
-          Enrolled Courses
-        </h2> 
-        {enrolledCourses.length > 0 ? (
+      <Header />
+      {/* Profile Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-white/10 rounded-xl flex items-center justify-center">
+              <span className="text-3xl font-bold text-white">{user.name?.charAt(0)}</span>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white">{user.name}</h1>
+              <div className="flex gap-4 mt-4">
+                <div className="bg-blue-500/30 px-4 py-2 rounded-lg">
+                  <span className="text-white font-medium">Courses: {enrolledCourses.length}</span>
+                </div>
+                <div className="bg-purple-500/30 px-4 py-2 rounded-lg">
+                  <span className="text-white font-medium">Quizzes: {results.length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="max-w-7xl mx-auto px-4 -mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg shadow">
+            <h3 className="text-lg font-bold text-blue-800">Total Courses</h3>
+            <p className="text-gray-700 mt-2">{enrolledCourses.length}</p>
+          </div>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg shadow">
+            <h3 className="text-lg font-bold text-green-800">Completed</h3>
+            <p className="text-gray-700 mt-2">
+              {enrolledCourses.filter(course => course?.completed >= 100).length}
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg shadow">
+            <h3 className="text-lg font-bold text-yellow-800">Quiz Results</h3>
+            <p className="text-gray-700 mt-2">{results.length}</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg shadow">
+            <h3 className="text-lg font-bold text-purple-800">Avg. Score</h3>
+            <p className="text-gray-700 mt-2">
+              {results.length > 0 
+                ? `${Math.round(results.reduce((acc, curr) => acc + curr.score, 0) / results.length)}%`
+                : 'N/A'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Course Progress */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">Course Progress</h2>
           <div className="space-y-6">
             {enrolledCourses.map((course, index) => {
-              // Validate and convert completionPercentage to a valid number
-              let completionPercentage = parseFloat(course?.completed);
-
-              // Debug log to check the value
-              console.log(
-                "Completion Percentage for course",
-                index,
-                ":",
-                completionPercentage
-              );
-
-              // If it's NaN, set it to 0
-              if (isNaN(completionPercentage)) {
-                completionPercentage = 0;
-              }
-
-              // Round it down to an integer
-              completionPercentage = Math.floor(completionPercentage);
-
+              const completionPercentage = Math.floor(parseFloat(course?.completed) || 0);
               return (
-                <div
-                  key={index}
-                  className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
-                >
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    {course?.course?.courseName}
-                  </h3>
-                  <div className="w-full bg-gray-200 rounded-full h-6">
+                <div key={index} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold text-gray-800">{course?.course?.courseName}</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      completionPercentage >= 75 ? 'bg-green-100 text-green-800' :
+                      completionPercentage >= 50 ? 'bg-blue-100 text-blue-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {completionPercentage}% Complete
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-blue-500 rounded-full text-center text-black ml-5"
+                      className="h-full transition-all duration-500 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600"
                       style={{ width: `${completionPercentage}%` }}
-                    >
-                      {completionPercentage}%
-                    </div>
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
-        ) : (
-          <p className="text-center text-gray-500">
-            You have not enrolled in any courses yet.
-          </p>
-        )}
+        </div>
       </div>
-      <div className="max-w-4xl bg-gradient-to-r from-sky-200 to-lime-200 mx-auto my-8 rounded-lg p-4">
-      <h1 className="text-2xl font-bold text-center mb-6">Your Quiz Results</h1>
 
-      {results.length > 0 ? (
-        <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Quiz Results */}
+      <div className="max-w-7xl mx-auto px-4 pb-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">Quiz Performance</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {results.map((result) => (
-              <div
-                key={result._id}
-                className="p-4 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300"
-              >
-                <p className="text-lg font-semibold">{result.title}</p>
-                <p className="text-gray-600">
-                  <strong>Score:</strong> {result.score}
-                </p>
-                <p className="text-gray-600">
-                  <strong>Time Taken:</strong> {result.timeTaken} seconds
-                </p>
+              <div key={result._id} className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-800 mb-2">{result.title}</h3>
+                <div className="flex justify-between items-center">
+                  <span className={`px-3 py-1 rounded-full text-sm ${
+                    result.score > 80 ? 'bg-green-100 text-green-800' :
+                    result.score > 60 ? 'bg-blue-100 text-blue-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    Score: {result.score}%
+                  </span>
+                  <span className="text-gray-500 text-sm">
+                    {result.timeTaken}s
+                  </span>
+                </div>
               </div>
             ))}
           </div>
-
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-center mb-4">Performance Overview</h2>
-            <Bar data={chartData} />
-          </div>
+          <Bar data={chartData} />
         </div>
-      ) : (
-        <p className="text-center text-gray-500">No results found.</p>
-      )}
-    </div>
+      </div>
     </>
   );
 };

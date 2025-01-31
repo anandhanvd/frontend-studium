@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import StudentHeader from "../../components/StudentHeader";
 import { useNavigate } from "react-router-dom";
-import { FaPlayCircle, FaTrashAlt, FaCheckCircle } from "react-icons/fa";
+import { FaPlayCircle, FaTrashAlt, FaCheckCircle, FaBookOpen, FaChalkboardTeacher, FaQuestionCircle, FaPaperPlane } from "react-icons/fa";
 import { FiBookOpen } from "react-icons/fi";
 import { IoIosArrowForward } from "react-icons/io";
 import { PiCarProfile, PiFileRsDuotone, PiPerson } from "react-icons/pi";
@@ -164,103 +164,152 @@ const AllCourses = () => {
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <StudentHeader />
-      <div className="container mx-auto p-6 mt-24">
-        <h1 className="text-3xl font-extrabold text-center mb-8 text-indigo-600">
-          All Courses
-        </h1>
-        {/* <button onClick={()=> navigate("/enrolled")} className="bg-indigo-400 text-white p-2 absolute end-0 mr-[600px] -translate-y-16  hover:bg-indigo-600 transition-all duration-300 rounded-lg shadow-xl"> Your Enrolled Courses</button> */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-16 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Explore Our Courses
+          </h1>
+          <p className="text-xl text-white/90 max-w-2xl mx-auto">
+            Discover a world of knowledge with our carefully curated courses designed to help you succeed.
+          </p>
+        </div>
+      </div>
+
+      {/* Courses Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses?.length > 0 ? (
             courses?.map((course) => (
               <div
                 key={course._id}
-                  className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl h-[530px] overflow-auto transform transition-all  hover:scale-105 duration-300"
+                className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
               >
-                <img
-                  src={course?.image}
-                  alt={course.courseName}
-                  className="w-full h-40 object-cover rounded-md mb-4"
-                />
-                <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                  {course.courseName}
-                </h2>
-                <p className="text-gray-600 mb-4 line-clamp-3">{course.description}</p>
-                <div className="text-gray-500 mb-4">
-                  <p>
-                    <strong>Notes:</strong> {course?.notes?.length}
-                  </p>
-                  <p>
-                    <strong>Lectures:</strong> {course?.videoLectures?.length}
-                  </p>
-                  <p>
-                    <strong>Quizzes:</strong> {course?.quizes?.length}
-                  </p>
+                <div className="relative overflow-hidden">
+                  <img
+                    src={course?.image}
+                    alt={course.courseName}
+                    className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                <button
-                  className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors w-full flex items-center justify-center"
-                  onClick={() => handleEnroll(course?._id)}
-                >
-                  <FaPlayCircle className="mr-2" /> Enroll in this Course
-                </button>
+                
+                <div className="p-6">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors">
+                    {course.courseName}
+                  </h2>
+                  <p className="text-gray-600 mb-4 line-clamp-2">
+                    {course.description}
+                  </p>
+                  
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="flex flex-col items-center p-2 bg-blue-50 rounded-lg">
+                      <FaBookOpen className="text-blue-600 text-xl mb-1" />
+                      <span className="text-sm text-gray-600">{course?.notes?.length} Notes</span>
+                    </div>
+                    <div className="flex flex-col items-center p-2 bg-purple-50 rounded-lg">
+                      <FaChalkboardTeacher className="text-purple-600 text-xl mb-1" />
+                      <span className="text-sm text-gray-600">{course?.videoLectures?.length} Lectures</span>
+                    </div>
+                    <div className="flex flex-col items-center p-2 bg-green-50 rounded-lg">
+                      <FaQuestionCircle className="text-green-600 text-xl mb-1" />
+                      <span className="text-sm text-gray-600">{course?.quizes?.length} Quizzes</span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleEnroll(course?._id)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:-translate-y-1"
+                  >
+                    <FaPlayCircle className="text-xl" />
+                    Enroll Now
+                  </button>
+                </div>
               </div>
             ))
           ) : (
-            <p className="col-span-3 text-center text-gray-600">No courses available.</p>
-          )}
-        </div>
-        <div className="p-8 mt-32 rounded-lg w-full justify-self-center ">
-        <h2 className="text-3xl font-semibold text-center text-blue-600 mb-8">
-          AI Chatbot Quiz Creator
-        </h2>
-
-        <div className="bg-sky-200 p-6 rounded-lg shadow-md max-w-4xl mx-auto">
-          <div className="chat-box h-64 overflow-y-auto  bg-gray-100 p-8 rounded-lg mb-4">
-            {chatHistory.map((chat, index) => (
-              <div
-                key={index}
-                className={`mb-2 p-2 rounded ${
-                  chat.sender === "user" ? "bg-blue-200 w-fit justify-self-end text-right" : "bg-gray-300 w-fit"
-                }`}
-              >
-                {chat.message}
-              </div>
-            ))}
-          </div>
-
-          {quizData.length === 0 && (
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                className="border p-2 rounded w-full"
-                placeholder="Type your answer..."
-                disabled={loading}
-              />
-              <button
-                onClick={handleUserMessage}
-                className="bg-blue-500 text-white px-4 py-2 rounded ml-2"
-                disabled={loading}
-              >
-                Send
-              </button>
+            <div className="col-span-full text-center py-12">
+              <p className="text-xl text-gray-600">No courses available at the moment.</p>
             </div>
           )}
-
-           {loading && <QuizLoadingAnimation progress={progress} />}
         </div>
-        </div>
-        {quizData.length > 0 && (
-        <div className="justify-self-center mb-20 ">
-        <button onClick={handleQuizRedirect} className="bg-emerald-200 p-2 rounded-lg shadow-md hover:shadow-lg shadow-gray-500 hover:shadow-gray-500 hover:bg-emerald-600 transition-all duration-300 hover:text-white">Attempt Quiz</button> 
-        </div>
-        )}
-        
-        
       </div>
-    </>
+
+      {/* Enhanced Chat Section */}
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
+            <h2 className="text-xl font-bold text-white text-center">
+              AI Quiz Generator
+            </h2>
+          </div>
+
+          {/* Chat Container */}
+          <div className="p-6">
+            <div className="chat-box h-[400px] overflow-y-auto bg-gray-100 p-4 rounded-lg">
+              {chatHistory.map((chat, index) => (
+                <div
+                  key={index}
+                  className={`mb-2 p-2 rounded ${
+                    chat.sender === "user" 
+                      ? "bg-blue-200 w-fit ml-auto" 
+                      : "bg-gray-300 w-fit"
+                  }`}
+                >
+                  {chat.message}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer Section */}
+          <div className="border-t bg-gray-50 p-4">
+            {loading ? (
+              <div className="mb-4">
+                <QuizLoadingAnimation progress={progress} />
+              </div>
+            ) : quizData.length > 0 ? (
+              <div className="flex justify-center">
+                <button
+                  onClick={handleQuizRedirect}
+                  className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Start Quiz
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && userInput.trim()) {
+                      e.preventDefault();
+                      handleUserMessage();
+                    }
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="Type your message..."
+                  disabled={loading}
+                />
+                <button
+                  onClick={handleUserMessage}
+                  disabled={loading || !userInput.trim()}
+                  className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Send
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
