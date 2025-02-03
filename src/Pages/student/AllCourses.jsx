@@ -31,6 +31,15 @@ const AllCourses = () => {
       { sender: "bot", message: "Hello! Let's create your quiz. What subject should it be about?" },
     ]);
 
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !loading) {
+        e.preventDefault();
+        if (userInput.trim()) {
+          handleUserMessage();
+        }
+      }
+    };
+
     const handleUserMessage = () => {
       if (!userInput.trim()) return;
   
@@ -38,9 +47,24 @@ const AllCourses = () => {
       setChatHistory([...chatHistory, { sender: "user", message: userInput }]);
   
       // Update the form data based on the current step
-      if (chatStep === 0) setFormData({ ...formData, subject: userInput });
-      if (chatStep === 1) setFormData({ ...formData, difficulty: userInput });
-      if (chatStep === 2) setFormData({ ...formData, focus_area: userInput });
+      const updatedFormData = { ...formData };
+      
+      if (chatStep === 0) updatedFormData.subject = userInput;
+      if (chatStep === 1) {
+        // Validate difficulty input
+        const difficulty = userInput.toLowerCase();
+        if (!['easy', 'medium', 'hard'].includes(difficulty)) {
+          setChatHistory(prev => [...prev, { 
+            sender: "bot", 
+            message: "Please enter a valid difficulty level: easy, medium, or hard" 
+          }]);
+          return;
+        }
+        updatedFormData.difficulty = difficulty;
+      }
+      if (chatStep === 2) updatedFormData.focus_area = userInput;
+
+      setFormData(updatedFormData);
   
       // Move to the next step or submit the data
       if (chatStep < questions.length - 1) {
@@ -287,12 +311,7 @@ const AllCourses = () => {
                   type="text"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && userInput.trim()) {
-                      e.preventDefault();
-                      handleUserMessage();
-                    }
-                  }}
+                  onKeyPress={handleKeyPress}
                   className="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   placeholder="Type your message..."
                   disabled={loading}

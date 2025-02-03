@@ -43,7 +43,7 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-0 right-0">
+    <div className="fixed bottom-0 right-0 z-50">
       {/* Chatbot Icon */}
       <div
         onClick={() => setShowChatbot(true)}
