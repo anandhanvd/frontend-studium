@@ -64,8 +64,27 @@ const Course = () => {
   // Update Lecture Input
   const updateLectureInput = (index, value) => {
     const updatedLectures = [...videoLectures];
-    updatedLectures[index] = value;
+    // Convert YouTube URL to embed format
+    const convertedUrl = convertToEmbedUrl(value);
+    updatedLectures[index] = convertedUrl;
     setVideoLectures(updatedLectures);
+  };
+
+  // Add this new function to handle URL conversion
+  const convertToEmbedUrl = (url) => {
+    try {
+      // Handle different YouTube URL formats
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      
+      if (match && match[2].length === 11) {
+        // Return the embed URL format
+        return `https://www.youtube.com/embed/${match[2]}`;
+      }
+      return url;
+    } catch (error) {
+      return url;
+    }
   };
 
   const handleImage = async (file) => {
