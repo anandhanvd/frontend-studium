@@ -28,15 +28,108 @@ const [courseSaved, setCourseSaved] = useState(false);
 const user = JSON.parse(localStorage.getItem("user"));
 const userId = user._id;
 const [progress, setProgress] = useState(0);
+const [relatedDocs, setRelatedDocs] = useState([]);
+
+  const calculateRelevance = (doc, courseTitle, unitTitle, currentTopic) => {
+    // Early return if the document is not from a relevant domain
+    const relevantDomains = ['biology', 'human heart', 'human anatomy', 'anatomy', 'physiology', 'human anatomy and physiology'];
+    if (!relevantDomains.some(domain => 
+      doc.domainName?.toLowerCase().includes(domain))) {
+      return -10; // Immediately disqualify irrelevant domains
+    }
+
+    let score = 0;
+    const docDomain = doc.domainName?.toLowerCase() || '';
+    const currentContent = currentTopic?.content?.toLowerCase() || '';
+    const topicTitle = currentTopic?.topic?.toLowerCase() || '';
+    
+    // Exact domain matches
+    if (docDomain === 'human heart' && topicTitle.includes('heart')) {
+      score += 30;
+    }
+    if (docDomain === 'human anatomy and physiology' && 
+        (topicTitle.includes('anatomy') || topicTitle.includes('physiology'))) {
+      score += 25;
+    }
+    if (docDomain === 'biology' && courseTitle.toLowerCase().includes('biology')) {
+      score += 20;
+    }
+
+    // Content-based matching
+    const contentKeywords = [
+      'heart', 'blood', 'circulation', 'cardiac', 'vessel', 'artery', 'vein',
+      'anatomy', 'physiology', 'organ', 'tissue', 'cell', 'system'
+    ];
+
+    contentKeywords.forEach(keyword => {
+      if (currentContent.includes(keyword) && docDomain.includes(keyword)) {
+        score += 5;
+      }
+      if (topicTitle.includes(keyword) && docDomain.includes(keyword)) {
+        score += 3;
+      }
+    });
+
+    return score;
+  };
 
   const getDomains = async () => {
     try {
-      const domainData = await axios.post(
-        "https://aistudiumb-9jub.onrender.com/domains/search",
-        { domainName: courseData.courseTitle }
-      );
-      console.log("Domains fetched:", domainData.data);
-      setDomainData(domainData.data);
+      const response = await axios.get("https://aistudiumb-9jub.onrender.com/domains/all");
+      
+      if (!response.data.domains || !courseData || !courseData.units) {
+        console.error("Missing required data for recommendations");
+        return;
+      }
+
+      // Get current unit and topic
+      const currentUnit = courseData.units[currentTopicIndex];
+      const currentTopic = currentUnit?.detailedContent?.topicContents?.[currentTopicIndex];
+      
+      console.log("Current Context:", {
+        courseTitle: courseData.courseTitle,
+        unitTitle: currentUnit?.unitTitle,
+        topicTitle: currentTopic?.topic,
+        content: currentTopic?.content
+      });
+      
+      // Flatten and prepare documents with strict domain filtering
+      const flattenedDocs = response.data.domains
+        .filter(domain => {
+          const domainName = domain.domainName.toLowerCase();
+          return domainName.includes('biology') || 
+                 domainName.includes('heart') || 
+                 domainName.includes('anatomy') || 
+                 domainName.includes('physiology');
+        })
+        .reduce((acc, domain) => {
+          const docsWithDomain = domain.documents.map(doc => ({
+            document: doc,
+            domainName: domain.domainName,
+            fileName: doc.split('/').pop(),
+            originalDomain: domain
+          }));
+          return [...acc, ...docsWithDomain];
+        }, []);
+      
+      // Score and filter documents
+      const scoredDocs = flattenedDocs
+        .map(doc => ({
+          ...doc,
+          relevanceScore: calculateRelevance(
+            doc, 
+            courseData.courseTitle, 
+            currentUnit?.unitTitle,
+            currentTopic
+          )
+        }))
+        .filter(doc => doc.relevanceScore > 0) // Only keep positively scored docs
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, 3); // Limit to top 3 most relevant docs
+
+      console.log("Recommended Documents:", scoredDocs);
+      setRelatedDocs(scoredDocs);
+      
     } catch (error) {
       console.error("Error fetching domains:", error);
     }
@@ -65,9 +158,10 @@ const [progress, setProgress] = useState(0);
   };
 
   useEffect(() => {
-      console.log("Generated Course:", courseData)
+    if (courseData?.units?.[currentTopicIndex]?.detailedContent?.topicContents) {
       getDomains();
-    }, []);
+    }
+  }, [courseData, currentTopicIndex]);
 
 
   const allUnitsCompleted =
@@ -349,28 +443,36 @@ const [openUnits, setOpenUnits] = useState({});
         </div>
         <div className="justify-self-center">
         <div className="text-center mt-5 w-fit bg-gray-100 p-6 rounded-lg shadow-lg">
-  <h1 className="text-xl font-bold text-gray-800 mb-4">Related Docs</h1>
-  <div className="text-left">
-    <h2 className="text-lg font-semibold text-gray-700 mb-2">
-      Domain: <span className="text-blue-600">{domainData?.domainName}</span>
-    </h2>
-    <h3 className="text-md font-medium text-gray-600">Documents:</h3>
-    <ul className="list-disc list-inside mt-2">
-      {domainData.documents?.map((doc, index) => (
-        <li key={index} className="mb-2">
-          <a
-            href={`/${doc}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
-          >
-            {doc}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </div>
-</div>
+          <h1 className="text-xl font-bold text-gray-800 mb-4">Related Documents</h1>
+          {relatedDocs.length > 0 ? (
+            <div className="text-left">
+              <ul className="space-y-3">
+                {relatedDocs.map((doc, index) => (
+                  <li key={index} className="border-b border-gray-200 pb-2">
+                    <a
+                      href={doc.document}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline block"
+                    >
+                      {doc.fileName || `Document ${index + 1}`}
+                    </a>
+                    <div className="text-sm text-gray-600 mt-1">
+                      <span className="bg-blue-100 px-2 py-1 rounded mr-2">
+                        {doc.domainName}
+                      </span>
+                      <span className="bg-green-100 px-2 py-1 rounded">
+                        {doc.subdomain}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-gray-600">No related documents found</p>
+          )}
+        </div>
 
         </div>
         
