@@ -200,16 +200,15 @@ const SingleCourse = () => {
                 key={index}
                 className="bg-gray-200 rounded-lg shadow p-4 relative"
               >
-                <iframe
+                <video 
+                  src={video} 
+                  controls 
                   className="w-full rounded-lg"
-                  height="300"
-                  src={video.replace("http", "https")}
-                  title={`Video ${index + 1}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-                <p className="absolute bottom-2 left-2 text-sm font-medium text-gray-700">
+                  preload="metadata"
+                >
+                  Your browser does not support the video tag.
+                </video>
+                <p className="mt-2 text-sm font-medium text-gray-700">
                   Video {index + 1}
                 </p>
               </div>

@@ -31,44 +31,60 @@ const [progress, setProgress] = useState(0);
 const [relatedDocs, setRelatedDocs] = useState([]);
 
   const calculateRelevance = (doc, courseTitle, unitTitle, currentTopic) => {
-    // Early return if the document is not from a relevant domain
-    const relevantDomains = ['biology', 'human heart', 'human anatomy', 'anatomy', 'physiology', 'human anatomy and physiology'];
-    if (!relevantDomains.some(domain => 
-      doc.domainName?.toLowerCase().includes(domain))) {
-      return -10; // Immediately disqualify irrelevant domains
+    // Early return if the document or domain name is invalid
+    if (!doc.domainName || 
+        doc.domainName.length <= 1 || 
+        !doc.document || 
+        typeof doc.domainName !== 'string') {
+      return -1;
+    }
+
+    const docDomain = doc.domainName?.toLowerCase().trim() || '';
+    const courseTitleLower = courseTitle?.toLowerCase().trim() || '';
+    const currentContent = currentTopic?.content?.toLowerCase().trim() || '';
+    const topicTitle = currentTopic?.topic?.toLowerCase().trim() || '';
+
+    // Skip invalid or single-character domains
+    if (docDomain.length <= 1) {
+      return -1;
     }
 
     let score = 0;
-    const docDomain = doc.domainName?.toLowerCase() || '';
-    const currentContent = currentTopic?.content?.toLowerCase() || '';
-    const topicTitle = currentTopic?.topic?.toLowerCase() || '';
-    
-    // Exact domain matches
-    if (docDomain === 'human heart' && topicTitle.includes('heart')) {
+
+    // Direct domain matches (highest priority)
+    if (docDomain === courseTitleLower || 
+        docDomain === topicTitle || 
+        courseTitleLower.includes(docDomain) || 
+        docDomain.includes(courseTitleLower)) {
       score += 30;
     }
-    if (docDomain === 'human anatomy and physiology' && 
-        (topicTitle.includes('anatomy') || topicTitle.includes('physiology'))) {
-      score += 25;
-    }
-    if (docDomain === 'biology' && courseTitle.toLowerCase().includes('biology')) {
+
+    // Topic content matches
+    const keywords = topicTitle.split(' ')
+      .filter(word => word.length > 3)
+      .filter(word => !['the', 'and', 'for', 'with'].includes(word));
+    
+    keywords.forEach(keyword => {
+      if (docDomain.includes(keyword)) {
+        score += 10;
+      }
+    });
+
+    // Check for specific domain matches
+    if (docDomain.includes('newton') && 
+        (topicTitle.includes('newton') || 
+         currentContent.includes('newton') || 
+         currentContent.includes('motion') || 
+         currentContent.includes('force'))) {
       score += 20;
     }
 
-    // Content-based matching
-    const contentKeywords = [
-      'heart', 'blood', 'circulation', 'cardiac', 'vessel', 'artery', 'vein',
-      'anatomy', 'physiology', 'organ', 'tissue', 'cell', 'system'
-    ];
-
-    contentKeywords.forEach(keyword => {
-      if (currentContent.includes(keyword) && docDomain.includes(keyword)) {
-        score += 5;
-      }
-      if (topicTitle.includes(keyword) && docDomain.includes(keyword)) {
-        score += 3;
-      }
-    });
+    if (docDomain.includes('physics') && 
+        (topicTitle.includes('physics') || 
+         topicTitle.includes('force') || 
+         topicTitle.includes('motion'))) {
+      score += 15;
+    }
 
     return score;
   };
@@ -93,22 +109,26 @@ const [relatedDocs, setRelatedDocs] = useState([]);
         content: currentTopic?.content
       });
       
-      // Flatten and prepare documents with strict domain filtering
+      // Flatten and prepare documents with improved validation
       const flattenedDocs = response.data.domains
         .filter(domain => {
-          const domainName = domain.domainName.toLowerCase();
-          return domainName.includes('biology') || 
-                 domainName.includes('heart') || 
-                 domainName.includes('anatomy') || 
-                 domainName.includes('physiology');
+          // Filter out invalid domains
+          return domain && 
+                 domain.domainName && 
+                 typeof domain.domainName === 'string' &&
+                 domain.domainName.trim().length > 1 &&
+                 domain.documents &&
+                 Array.isArray(domain.documents);
         })
         .reduce((acc, domain) => {
-          const docsWithDomain = domain.documents.map(doc => ({
-            document: doc,
-            domainName: domain.domainName,
-            fileName: doc.split('/').pop(),
-            originalDomain: domain
-          }));
+          const docsWithDomain = domain.documents
+            .filter(doc => doc && typeof doc === 'string' && doc.trim().length > 0)
+            .map(doc => ({
+              document: doc,
+              domainName: domain.domainName.trim(),
+              fileName: doc.split('/').pop(),
+              originalDomain: domain
+            }));
           return [...acc, ...docsWithDomain];
         }, []);
       
@@ -125,7 +145,7 @@ const [relatedDocs, setRelatedDocs] = useState([]);
         }))
         .filter(doc => doc.relevanceScore > 0) // Only keep positively scored docs
         .sort((a, b) => b.relevanceScore - a.relevanceScore)
-        .slice(0, 3); // Limit to top 3 most relevant docs
+        .slice(0, 3); // Show top 3 most relevant docs
 
       console.log("Recommended Documents:", scoredDocs);
       setRelatedDocs(scoredDocs);

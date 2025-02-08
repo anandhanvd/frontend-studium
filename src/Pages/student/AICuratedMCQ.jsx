@@ -259,18 +259,24 @@ const AICuratedMCQ = () => {
     }
   };
 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     let timerInterval;
     if (isTimerRunning && timeRemaining > 0) {
       timerInterval = setInterval(() => {
-        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        const remaining = Math.max(900 - elapsedTime, 0);
-        setTimeRemaining(remaining);
-        
-        if (remaining === 0) {
-          clearInterval(timerInterval);
-          handleSubmit();
-        }
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(timerInterval);
+            handleSubmit();
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
 
@@ -279,10 +285,11 @@ const AICuratedMCQ = () => {
         clearInterval(timerInterval);
       }
     };
-  }, [isTimerRunning, startTime]);
+  }, [isTimerRunning]);
 
   useEffect(() => {
-    if (quizData.length > 0 && !startTime) {
+    if (quizData.length > 0 && !isTimerRunning) {
+      setTimeRemaining(900); // Reset to 15 minutes (900 seconds)
       setStartTime(Date.now());
       setIsTimerRunning(true);
     }
@@ -336,10 +343,14 @@ const AICuratedMCQ = () => {
         {/* Quiz Section */}
         {quizData.length > 0 && (
           <div className="bg-gray-100 w-full max-w-4xl mx-auto mt-6 md:mt-10 shadow-lg rounded-lg p-4 md:p-6">
-            {/* Timer Section - Removed visual timer but keeping functionality */}
+            {/* Timer Section */}
             <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
               <div className="text-blue-600 font-semibold">
                 Total Questions: {quizData.reduce((acc, topic) => acc + topic.questions.length, 0)}
+              </div>
+              <div className="flex items-center gap-2 text-red-600 font-semibold">
+                <FaClock className="text-xl" />
+                Time Remaining: {formatTime(timeRemaining)}
               </div>
             </div>
 
