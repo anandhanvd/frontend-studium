@@ -61,10 +61,28 @@ const Course = () => {
     setVideoLectures([...videoLectures, ""]);
   };
 
-  // Update Lecture Input
+  // Add the URL conversion function
+  const convertToEmbedUrl = (url) => {
+    try {
+      // Handle different YouTube URL formats
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      
+      if (match && match[2].length === 11) {
+        // Return the embed URL format
+        return `https://www.youtube.com/embed/${match[2]}`;
+      }
+      return url;
+    } catch (error) {
+      return url;
+    }
+  };
+
+  // Update Lecture Input with URL conversion
   const updateLectureInput = (index, value) => {
     const updatedLectures = [...videoLectures];
-    updatedLectures[index] = value;
+    const convertedUrl = convertToEmbedUrl(value);
+    updatedLectures[index] = convertedUrl;
     setVideoLectures(updatedLectures);
   };
 
@@ -168,21 +186,23 @@ const Course = () => {
     }
   };
 
-  // Upload Notes File to Cloudinary
-  const uploadVideos = async (file) => {
+  // Upload video file to Cloudinary
+  const uploadVideo = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "vqohpgdn"); // Replace with your Cloudinary preset
-    formData.append("resource_type", "raw");
+    formData.append("upload_preset", "vqohpgdn");
+    formData.append("resource_type", "video");
 
     try {
       const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dcigsqglj/auto/upload", // Replace with your Cloudinary endpoint
+        "https://api.cloudinary.com/v1_1/dcigsqglj/video/upload",
         formData
       );
-      setVideos([...videos, response.data.url]);
+      setVideos([...videos, response.data.secure_url]);
+      toast.success("Video uploaded successfully!");
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error uploading video:", error);
+      toast.error("Failed to upload video. Please try again.");
     }
   };
 
@@ -706,16 +726,31 @@ const Course = () => {
 
             {/* Video Lectures */}
             <div className="mb-6">
-              <label className="block font-semibold text-gray-700 mb-2">Video Lectures</label>
+              <label className="block font-semibold text-gray-700 mb-2">YouTube Video Lectures</label>
               {videoLectures.map((lecture, index) => (
                 <div key={index} className="flex items-center gap-4 mb-2">
-                  <input
-                    type="url"
-                    value={lecture}
-                    onChange={(e) => updateLectureInput(index, e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg p-3"
-                    placeholder="Enter lecture URL"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="url"
+                      value={lecture}
+                      onChange={(e) => updateLectureInput(index, e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                      placeholder="Enter YouTube video URL"
+                    />
+                    {lecture && (
+                      <div className="mt-2">
+                        <iframe
+                          width="100%"
+                          height="200"
+                          src={lecture}
+                          title={`Lecture ${index + 1}`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    )}
+                  </div>
                   {index === videoLectures.length - 1 && (
                     <button
                       onClick={addLectureInput}
@@ -796,6 +831,44 @@ const Course = () => {
                   Analyzing document...
                 </div>
               )}
+            </div>
+
+            {/* Add this inside the modal form, after the Video Lectures section */}
+            <div className="mb-6">
+              <label className="block font-semibold text-gray-700 mb-2">Course Videos</label>
+              <div className="space-y-4">
+                <input
+                  type="file"
+                  onChange={(e) => uploadVideo(e.target.files[0])}
+                  className="w-full border border-gray-300 rounded-lg p-3"
+                  accept="video/*"
+                />
+                
+                {/* Preview uploaded videos */}
+                {videos.length > 0 && (
+                  <div className="grid grid-cols-1 gap-4 mt-4">
+                    {videos.map((video, index) => (
+                      <div key={index} className="relative bg-gray-100 rounded-lg p-4">
+                        <video 
+                          src={video} 
+                          controls 
+                          className="w-full rounded-lg"
+                          preload="metadata"
+                        />
+                        <button
+                          onClick={() => {
+                            const updatedVideos = videos.filter((_, i) => i !== index);
+                            setVideos(updatedVideos);
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Action Buttons */}
